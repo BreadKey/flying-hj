@@ -79,7 +79,7 @@ class Field extends ChangeNotifier {
       acceleration = timeDelta * (gravity - (isFlying ? flyPower : 0)) * fps;
     }
 
-    acceleration *= screenHeight / inGameHeight;
+    acceleration *= inGameRatio;
 
     velocity += acceleration;
 

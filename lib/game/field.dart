@@ -34,7 +34,7 @@ class Field extends ChangeNotifier {
   void startGame() {
     print("start Game");
     isGameOver = false;
-    flyer.x = 0;
+    flyer.x = flyer.inGameSize * inGameRatio / 2;
     flyer.y = screenHeight / 2;
     flyer.angle = 0;
     velocity = 0;

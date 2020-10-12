@@ -10,12 +10,14 @@ class FieldScreen extends StatefulWidget {
 
 class _FieldScreenState extends State<FieldScreen> {
   Field field;
+  double flyerSize;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     field = Field(
         MediaQuery.of(context).size.width, MediaQuery.of(context).size.height);
+    flyerSize = field.inGameRatio * field.flyer.inGameSize;
     field.startGame();
 
     field.addListener(() {
@@ -37,17 +39,15 @@ class _FieldScreenState extends State<FieldScreen> {
             color: Colors.lightBlue,
             child: Align(
                 alignment: Alignment.topLeft,
+                /// Alignmnet is top left. so center flyer
                 child: Transform.translate(
-                    offset: Offset(field.flyer.x, field.flyer.y),
+                    offset: Offset(field.flyer.x - flyerSize / 2,
+                        field.flyer.y - flyerSize / 2),
                     child: Transform.rotate(
                       angle: field.flyer.angle,
                       child: SizedBox(
-                        width: field.screenHeight *
-                            field.flyer.inGameSize /
-                            Field.inGameHeight,
-                        height: field.screenHeight *
-                            field.flyer.inGameSize /
-                            Field.inGameHeight,
+                        width: flyerSize,
+                        height: flyerSize,
                         child: field.flyer.image,
                       ),
                     ))),

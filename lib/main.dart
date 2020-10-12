@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flying_hj/screen/field_screen.dart';
 
 void main() {
   runApp(MyApp());
+  SystemChrome.setPreferredOrientations(
+      [DeviceOrientation.landscapeLeft, DeviceOrientation.landscapeRight]);
 }
 
 class MyApp extends StatelessWidget {

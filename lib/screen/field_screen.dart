@@ -40,7 +40,7 @@ class _FieldScreenState extends State<FieldScreen> {
                 child: Transform.translate(
                     offset: Offset(field.flyer.x, field.flyer.y),
                     child: Transform.rotate(
-                      angle: field.velocity / field.screenHeight * pi / 2,
+                      angle: field.flyer.angle,
                       child: SizedBox(
                         width: field.screenHeight *
                             field.flyer.inGameSize /
@@ -58,9 +58,9 @@ class _FieldScreenState extends State<FieldScreen> {
               color: Colors.pink,
               onHighlightChanged: (value) {
                 if (value) {
-                  field.startUp();
+                  field.startFly();
                 } else {
-                  field.endUp();
+                  field.endFly();
                 }
               },
               onPressed: () {

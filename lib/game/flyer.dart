@@ -5,6 +5,7 @@ abstract class Flyer {
 
   double x;
   double y;
+  double angle;
 
   Flyer(this.inGameSize);
 

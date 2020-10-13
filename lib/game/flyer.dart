@@ -1,20 +1,8 @@
-import 'package:flutter/material.dart';
+import 'package:flying_hj/game/game_object.dart';
 
-abstract class Flyer {
-  final double spriteSize;
-  final double width;
-  final double height;
+abstract class Flyer extends GameObject {
 
-  double get right => x + width / 2;
-  double get left => x - width / 2;
-  double get top => y + height / 2;
-  double get bottom => y - height / 2;
-
-  double x;
-  double y;
-  double angle;
-
-  Flyer(this.spriteSize, this.width, this.height);
+  Flyer(double spriteWidth, double spriteHeight, double width, double height): super(spriteWidth, spriteHeight, width, height);
 
   void dispose();
 
@@ -22,6 +10,4 @@ abstract class Flyer {
   void dead();
   void fly();
   void endFly();
-
-  Widget get sprite;
 }

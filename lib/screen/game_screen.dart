@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flying_hj/game/flyer.dart';
 import 'package:flying_hj/game/flying_game.dart';
+import 'package:flying_hj/game/game_object.dart';
 
 class GameScreen extends StatefulWidget {
   @override
@@ -9,7 +10,6 @@ class GameScreen extends StatefulWidget {
 
 class _GameScreenState extends State<GameScreen> {
   FlyingGame game;
-  double flyerSize;
 
   double gameRatio;
 
@@ -18,9 +18,8 @@ class _GameScreenState extends State<GameScreen> {
     super.didChangeDependencies();
     game = FlyingGame();
 
-    gameRatio = MediaQuery.of(context).size.height / game.field.height;
+    gameRatio = MediaQuery.of(context).size.height / FlyingGame.gameHeight;
 
-    flyerSize = gameRatio * game.flyer.spriteSize;
     game.startGame();
 
     game.addListener(() {
@@ -38,8 +37,8 @@ class _GameScreenState extends State<GameScreen> {
   Widget build(BuildContext context) => Container(
         color: Colors.lightBlue,
         child: SizedBox(
-            width: game.field.width * gameRatio,
-            height: game.field.height * gameRatio,
+            width: 10000,
+            height: FlyingGame.gameHeight * gameRatio,
             child: Stack(
               children: [
                 Align(
@@ -47,49 +46,44 @@ class _GameScreenState extends State<GameScreen> {
                   alignment: Alignment.bottomLeft,
                   child: Transform.translate(
                       offset: Offset(
-                          (-game.flyer.x + game.flyer.spriteSize / 2) *
+                          (-game.flyer.x + game.flyer.spriteWidth / 2) *
                               gameRatio,
                           0),
                       child: Stack(alignment: Alignment.bottomLeft, children: [
+                        Stack(
+                            children: game.fields
+                                .map((field) => SizedBox(
+                                      key: ValueKey(field),
+                                      width: field.width * gameRatio,
+                                      child: Stack(
+                                        alignment: Alignment.bottomLeft,
+                                        children: field.walls
+                                            .expand((e) => e)
+                                            .map((wall) => Transform.translate(
+                                                  key: ValueKey(wall),
+                                                  offset: center(wall),
+                                                  child: SizedBox(
+                                                    width: wall.spriteWidth *
+                                                        gameRatio,
+                                                    height: wall.spriteHeight *
+                                                        gameRatio,
+                                                    child: wall.sprite,
+                                                  ),
+                                                ))
+                                            .toList(),
+                                      ),
+                                    ))
+                                .toList()),
                         Transform.translate(
                             key: ValueKey(game.flyer),
                             offset: center(game.flyer),
                             child: Transform.rotate(
                               angle: game.flyer.angle,
                               child: SizedBox(
-                                  width: flyerSize,
-                                  height: flyerSize,
+                                  width: game.flyer.spriteWidth * gameRatio,
+                                  height: game.flyer.spriteHeight * gameRatio,
                                   child: game.flyer.sprite),
                             )),
-                        Stack(
-                            alignment: Alignment.bottomLeft,
-                            key: ValueKey("hurdles"),
-                            children: game.field.hurdles
-                                .map((hurdle) => Transform.translate(
-                                      key: ValueKey(hurdle),
-                                      offset: center(hurdle),
-                                      child: SizedBox(
-                                        width: hurdle.spriteSize * gameRatio,
-                                        height: hurdle.spriteSize * gameRatio,
-                                        child: hurdle.sprite,
-                                      ),
-                                    ))
-                                .toList()),
-                        Stack(
-                            alignment: Alignment.bottomLeft,
-                            key: ValueKey("walls"),
-                            children: game.field.walls
-                                .expand((element) => element)
-                                .map((wall) => Transform.translate(
-                                      key: ValueKey(wall),
-                                      offset: center(wall),
-                                      child: SizedBox(
-                                        width: wall.spriteSize * gameRatio,
-                                        height: wall.spriteSize * gameRatio,
-                                        child: wall.sprite,
-                                      ),
-                                    ))
-                                .toList()),
                       ])),
                 ),
                 Align(
@@ -116,8 +110,8 @@ class _GameScreenState extends State<GameScreen> {
             )),
       );
 
-  Offset center(Flyer flyer) =>
-      Offset(
-          (flyer.x - flyer.spriteSize / 2), -(flyer.y - flyer.spriteSize / 2)) *
+  Offset center(GameObject gameObject) =>
+      Offset((gameObject.x - gameObject.spriteWidth / 2),
+          -(gameObject.y - gameObject.spriteHeight / 2)) *
       gameRatio;
 }

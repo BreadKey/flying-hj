@@ -1,8 +1,8 @@
-import 'package:flying_hj/game/flyer.dart';
+import 'package:flying_hj/game/game_object.dart';
 
-abstract class Field {
-  int get width;
-  int get height;
-  List<Flyer> get hurdles;
-  List<List<Flyer>> get walls;
+class Field {
+  final int width;
+  final List<List<GameObject>> walls;
+
+  Field(this.width, this.walls);
 }

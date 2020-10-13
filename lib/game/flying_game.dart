@@ -11,11 +11,11 @@ import 'package:flying_hj/game/game_object.dart';
 class FlyingGame extends ChangeNotifier {
   static const int fps = 32;
 
-  static const double gravity = -50;
-  static const double flyPower = 50;
+  static const double gravity = -100;
+  static const double flyPower = 100;
   static const int gameHeight = 100;
   double velocityY = 0;
-  double velocityX = 100;
+  double velocityX = 150;
 
   bool isFlying = false;
 
@@ -86,10 +86,11 @@ class FlyingGame extends ChangeNotifier {
   }
 
   int addNextPathByRandom() {
-    final airTime = 3 / (Random().nextInt(6) + 1);
+    final airTime = velocityX / flyPower / (Random().nextInt(4) + 1);
 
     final accelerationY = (velocityX /
-                (_pathStartVelocity.dy < 0 ? flyPower : gravity) *
+                (_pathStartVelocity.dy < 0 ? flyPower : gravity) /
+                2 *
                 airTime -
             _pathStartVelocity.dy * airTime) *
         2 /
@@ -161,8 +162,11 @@ class FlyingGame extends ChangeNotifier {
       gameOver();
     }
 
-    if (flyer.left > _currentField.walls[30].first.right) {
-      print(_currentField.walls[30].first.right);
+    final maxWallLengthInPath = (velocityX / flyPower * 10).round();
+
+    if (flyer.left >
+        _currentField.walls[maxWallLengthInPath].first.right) {
+      print(_currentField.walls[maxWallLengthInPath].first.right);
       final newWallsLength = addNextPathByRandom();
       _currentField.walls.removeRange(0, newWallsLength);
     }

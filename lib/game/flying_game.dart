@@ -52,7 +52,7 @@ class FlyingGame extends ChangeNotifier {
     _previousBottomSlopeHeight = null;
     _previousTopSlopeHeight = null;
 
-    _pathHieght = flyer.height * 10;
+    _pathHieght = 62;
 
     fields.clear();
     fields.add(_currentField);

@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flying_hj/game/flyer.dart';
 
 class Hyeonjung extends Flyer {
-  Hyeonjung() : super(20, 20, 12, 6);
+  Hyeonjung() : super(20, 20, 10, 4);
 
   Timer _flyTimer;
 

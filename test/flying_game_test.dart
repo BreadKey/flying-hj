@@ -17,7 +17,7 @@ void main() {
     Offset velocity = Offset(2, 2);
     Offset acceleration = Offset(0, -2);
 
-    List<Offset> parabola = game.generteParabola(
+    List<Offset> parabola = game.generateParabola(
         Offset(0, 0), velocity, acceleration, moveDistnace,
         interval: moveDistnace * 5 ~/ 1);
 
@@ -28,7 +28,7 @@ void main() {
     acceleration = Offset(0, 2.5);
     moveDistnace = 2;
 
-    parabola = game.generteParabola(
+    parabola = game.generateParabola(
         parabola.last, velocity, acceleration, moveDistnace,
         interval: moveDistnace * 5 ~/ 1);
 
@@ -38,7 +38,7 @@ void main() {
     acceleration = Offset(0, -2);
     moveDistnace = 3;
 
-    parabola = game.generteParabola(
+    parabola = game.generateParabola(
         parabola.last, velocity, acceleration, moveDistnace,
         interval: moveDistnace * 5 ~/ 1);
 

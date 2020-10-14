@@ -15,7 +15,9 @@ class FlyingGame extends ChangeNotifier {
   static const double flyPower = 100;
   static const int gameHeight = 100;
   static const double defaultVelocityX = 100;
-  static const double defaultPathHieght = 62;
+  static const double defaultPathHieght = 40;
+  static const double maxVelocityX = 250;
+  static const double maxPathHeight = 70;
   double _velocityY = 0;
   double _velocityX = 100;
 
@@ -70,7 +72,7 @@ class FlyingGame extends ChangeNotifier {
     _velocityY = 0;
 
     _pathStartVelocity = Offset(_velocityX, 0);
-    _pathStartPoint = Offset(0, gameHeight / 2 - gravity * 0.25 / 2);
+    _pathStartPoint = Offset(0, gameHeight / 2);
 
     isFlying = false;
 
@@ -78,7 +80,9 @@ class FlyingGame extends ChangeNotifier {
 
     _wallQueue.clear();
 
-    addNextPath(0.5, Offset(0, gravity));
+    addNextPath(0.25, Offset(0, gravity / 2));
+    _pathStartVelocity = Offset(_velocityX, 0);
+    addNextPath(1, Offset(0, 0));
     for (int i = 0; i < 10; i++) {
       addNextPathByRandom();
     }
@@ -100,10 +104,13 @@ class FlyingGame extends ChangeNotifier {
 
     if (_pathStartPoint.dy > gameHeight) {
       _pathStartVelocity = Offset(_velocityX, 0);
-      return addNextPath(0.5, Offset(0, gravity / airTime));
-    } else if (_pathStartPoint.dy < 0) {
+      return addNextPath(airTime, Offset(0, gravity / airTime));
+    } else if (_pathStartPoint.dy < _pathHieght / 2) {
       _pathStartVelocity = Offset(_velocityX, 0);
-      return addNextPath(0.5, Offset(0, flyPower / airTime));
+      return addNextPath(airTime, Offset(0, flyPower / airTime));
+    } else if (_pathStartVelocity.dy < 5 && _pathStartVelocity.dy > -5) {
+      return addNextPath(airTime,
+          Offset(0, (Random().nextInt(2) == 0 ? flyPower : gravity) / airTime));
     }
 
     final accelerationY = -(_pathStartVelocity.dy +
@@ -117,7 +124,7 @@ class FlyingGame extends ChangeNotifier {
   int addNextPath(double airTime, Offset acceleration) {
     final parabola = generateParabola(
         _pathStartPoint, _pathStartVelocity, acceleration, airTime * _velocityX,
-        interval: airTime * 10 ~/ 1);
+        interval: airTime * 15 ~/ 1);
     _pathStartPoint = parabola.last;
     _pathStartVelocity += acceleration * airTime;
 
@@ -184,9 +191,12 @@ class FlyingGame extends ChangeNotifier {
     _playTime += timeDelta;
     _currentFrame++;
 
-    if (_currentFrame % (fps * 10) == 0) {
-      _velocityX += 10;
-      _pathHieght -= 0.5;
+    if (_currentFrame % (fps * 5) == 0) {
+      _velocityX += 2.5;
+      _pathHieght += 1;
+
+      _velocityX = min(maxVelocityX, _velocityX);
+      _pathHieght = min(maxPathHeight, _pathHieght);
     }
   }
 
@@ -317,8 +327,8 @@ class SlopePainter extends CustomPainter {
         slope.fromTop
             ? slope.previousSlopeHeight ?? slope.height
             : slope.height);
-    slopePath.lineTo(slope.width, slope.height);
-    slopePath.lineTo(slope.width, 0);
+    slopePath.lineTo(slope.width + 0.1, slope.height);
+    slopePath.lineTo(slope.width + 0.1, 0);
     slopePath.close();
 
     canvas.drawPath(slopePath, Paint()..color = Colors.white);

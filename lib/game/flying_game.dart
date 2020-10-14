@@ -88,27 +88,23 @@ class FlyingGame extends ChangeNotifier {
   int addNextPathByRandom() {
     final airTime = velocityX / flyPower / (Random().nextInt(4) + 1);
 
-    final accelerationY = (velocityX /
-                (_pathStartVelocity.dy < 0 ? flyPower : gravity) /
-                2 *
-                airTime -
-            _pathStartVelocity.dy * airTime) *
-        2 /
-        (airTime * airTime);
-
-    print(accelerationY);
+    final accelerationY = 2 *
+        -(_pathStartVelocity.dy +
+            (_pathHieght / flyPower / airTime) *
+                (Random().nextInt(4) / 4 * (_pathStartVelocity.dy < 0 ? -1 : 1))) /
+        airTime;
 
     return addNextPath(airTime, Offset(0, accelerationY));
   }
 
   int addNextPath(double airTime, Offset acceleration) {
-    final halfParabola = generateParabola(
+    final parabola = generateParabola(
         _pathStartPoint, _pathStartVelocity, acceleration, airTime * velocityX,
         interval: airTime * 10 ~/ 1);
-    _pathStartPoint = halfParabola.last;
+    _pathStartPoint = parabola.last;
     _pathStartVelocity += acceleration * airTime;
 
-    final walls = generateWall(halfParabola..removeLast(), _pathHieght);
+    final walls = generateWall(parabola..removeLast(), _pathHieght);
 
     _currentField.walls.addAll(walls);
 
@@ -136,7 +132,6 @@ class FlyingGame extends ChangeNotifier {
       objects.addAll(_wallQueue.first);
 
       if (_wallQueue.first.first.right < flyer.left) {
-        print("wall");
         _wallQueue.removeFirst();
       }
     }
@@ -145,7 +140,6 @@ class FlyingGame extends ChangeNotifier {
       objects.add(_hurdleQueue.first);
 
       if (_hurdleQueue.first.right < flyer.left) {
-        print("hurdle");
         _hurdleQueue.removeFirst();
         print(_hurdleQueue.first.right);
       }
@@ -162,11 +156,9 @@ class FlyingGame extends ChangeNotifier {
       gameOver();
     }
 
-    final maxWallLengthInPath = (velocityX / flyPower * 10).round();
+    final wallIndexInMiddle = _currentField.walls.length ~/ 2;
 
-    if (flyer.left >
-        _currentField.walls[maxWallLengthInPath].first.right) {
-      print(_currentField.walls[maxWallLengthInPath].first.right);
+    if (flyer.left > _currentField.walls[wallIndexInMiddle].first.right) {
       final newWallsLength = addNextPathByRandom();
       _currentField.walls.removeRange(0, newWallsLength);
     }

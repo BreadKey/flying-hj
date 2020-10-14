@@ -95,6 +95,9 @@ class _GameScreenState extends State<GameScreen> {
               )),
         ),
         floatingActionButton: MaterialButton(
+          shape: CircleBorder(),
+          minWidth: 80,
+          height: 80,
           child: game.isGameOver
               ? const Icon(
                   Icons.refresh,

@@ -14,8 +14,10 @@ class FlyingGame extends ChangeNotifier {
   static const double gravity = -100;
   static const double flyPower = 100;
   static const int gameHeight = 100;
-  double velocityY = 0;
-  double velocityX = 150;
+  static const double defaultVelocityX = 100;
+  static const double defaultPathHieght = 62;
+  double _velocityY = 0;
+  double _velocityX = 100;
 
   bool isFlying = false;
 
@@ -41,18 +43,22 @@ class FlyingGame extends ChangeNotifier {
 
   double _pathHieght;
 
+  double _playTime;
+  double get playTime => _playTime;
+
+  int _currentFrame = 0;
+
   void startGame() {
     isGameOver = false;
-
-    _pathStartVelocity = Offset(velocityX, 0);
-    _pathStartPoint = Offset(0, gameHeight / 2);
+    _playTime = 0;
+    _currentFrame = 0;
 
     _currentField = Field(1000, []);
 
     _previousBottomSlopeHeight = null;
     _previousTopSlopeHeight = null;
 
-    _pathHieght = 62;
+    _pathHieght = defaultPathHieght;
 
     fields.clear();
     fields.add(_currentField);
@@ -60,7 +66,11 @@ class FlyingGame extends ChangeNotifier {
     flyer.x = 0;
     flyer.y = gameHeight / 2;
     flyer.angle = 0;
-    velocityY = 0;
+    _velocityX = defaultVelocityX;
+    _velocityY = 0;
+
+    _pathStartVelocity = Offset(_velocityX, 0);
+    _pathStartPoint = Offset(0, gameHeight / 2 - gravity * 0.25 / 2);
 
     isFlying = false;
 
@@ -86,12 +96,19 @@ class FlyingGame extends ChangeNotifier {
   }
 
   int addNextPathByRandom() {
-    final airTime = velocityX / flyPower / (Random().nextInt(4) + 1);
+    final airTime = 1 / (Random().nextInt(4) + 1);
 
-    final accelerationY = 2 *
-        -(_pathStartVelocity.dy +
-            (_pathHieght / flyPower / airTime) *
-                (Random().nextInt(4) / 4 * (_pathStartVelocity.dy < 0 ? -1 : 1))) /
+    if (_pathStartPoint.dy > gameHeight) {
+      _pathStartVelocity = Offset(_velocityX, 0);
+      return addNextPath(0.5, Offset(0, gravity / airTime));
+    } else if (_pathStartPoint.dy < 0) {
+      _pathStartVelocity = Offset(_velocityX, 0);
+      return addNextPath(0.5, Offset(0, flyPower / airTime));
+    }
+
+    final accelerationY = -(_pathStartVelocity.dy +
+            (_pathHieght / flyPower / airTime) * (Random().nextInt(3) - 1)) *
+        2 /
         airTime;
 
     return addNextPath(airTime, Offset(0, accelerationY));
@@ -99,7 +116,7 @@ class FlyingGame extends ChangeNotifier {
 
   int addNextPath(double airTime, Offset acceleration) {
     final parabola = generateParabola(
-        _pathStartPoint, _pathStartVelocity, acceleration, airTime * velocityX,
+        _pathStartPoint, _pathStartVelocity, acceleration, airTime * _velocityX,
         interval: airTime * 10 ~/ 1);
     _pathStartPoint = parabola.last;
     _pathStartVelocity += acceleration * airTime;
@@ -164,6 +181,13 @@ class FlyingGame extends ChangeNotifier {
     }
 
     notifyListeners();
+    _playTime += timeDelta;
+    _currentFrame++;
+
+    if (_currentFrame % (fps * 10) == 0) {
+      _velocityX += 10;
+      _pathHieght -= 0.5;
+    }
   }
 
   bool isCollided(GameObject a, GameObject b) {
@@ -183,19 +207,19 @@ class FlyingGame extends ChangeNotifier {
   void _moveFlyer() {
     double acceleration = (isFlying ? flyPower : gravity);
 
-    if (velocityY > 0 && !isFlying) {
+    if (_velocityY > 0 && !isFlying) {
       acceleration += gravity;
-    } else if (velocityY < 0 && isFlying) {
+    } else if (_velocityY < 0 && isFlying) {
       acceleration += flyPower;
     }
 
     acceleration *= timeDelta;
 
-    velocityY += acceleration;
+    _velocityY += acceleration;
 
-    flyer.x += velocityX * timeDelta;
-    flyer.y += velocityY * timeDelta;
-    flyer.angle = -velocityY / gameHeight * pi / 2;
+    flyer.x += _velocityX * timeDelta;
+    flyer.y += _velocityY * timeDelta;
+    flyer.angle = -_velocityY / gameHeight * pi / 2;
   }
 
   void startFly() {

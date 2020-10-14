@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flying_hj/game/flyer.dart';
 
 class Hyeonjung extends Flyer {
-  Hyeonjung() : super(20);
+  Hyeonjung() : super(20, 20, 10, 4);
 
   Timer _flyTimer;
 
@@ -27,7 +27,7 @@ class Hyeonjung extends Flyer {
   int _currentImageIndex = 0;
 
   @override
-  Image get image => _images[_currentImageIndex];
+  Image get sprite => _images[_currentImageIndex];
 
   @override
   void start() {

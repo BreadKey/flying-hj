@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flying_hj/screen/field_screen.dart';
+import 'package:flutter/services.dart';
+import 'package:flying_hj/screen/game_screen.dart';
 
 void main() {
   runApp(MyApp());
+  SystemChrome.setPreferredOrientations(
+      [DeviceOrientation.landscapeLeft, DeviceOrientation.landscapeRight]);
 }
 
 class MyApp extends StatelessWidget {
@@ -27,6 +30,6 @@ class MyApp extends StatelessWidget {
           // closer together (more dense) than on mobile platforms.
           visualDensity: VisualDensity.adaptivePlatformDensity,
         ),
-        home: FieldScreen());
+        home: GameScreen(),);
   }
 }

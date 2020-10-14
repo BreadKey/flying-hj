@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flying_hj/game/flyer.dart';
@@ -35,6 +36,7 @@ class Field extends ChangeNotifier {
     isGameOver = false;
     flyer.x = 0;
     flyer.y = screenHeight / 2;
+    flyer.angle = 0;
     velocity = 0;
 
     isFlying = false;
@@ -55,8 +57,20 @@ class Field extends ChangeNotifier {
 
   void update() {
     print("update");
-    double acceleration;
+    _moveFlyer();
 
+    notifyListeners();
+
+    if (flyer.y > screenHeight || flyer.y < 0) {
+      print("gameOver");
+      isGameOver = true;
+      _frameGenerator.cancel();
+      flyer.dead();
+    }
+  }
+
+  void _moveFlyer() {
+    double acceleration;
     if (velocity < 0 && !isFlying) {
       acceleration = timeDelta * (gravity + flyPower / 2) * fps;
     } else if (velocity > 0 && isFlying) {
@@ -70,22 +84,15 @@ class Field extends ChangeNotifier {
     velocity += acceleration;
 
     flyer.y += velocity * timeDelta;
-    notifyListeners();
-
-    if (flyer.y > screenHeight || flyer.y < 0) {
-      print("gameOver");
-      isGameOver = true;
-      _frameGenerator.cancel();
-      flyer.dead();
-    }
+    flyer.angle = velocity / screenHeight * pi / 2;
   }
 
-  void startUp() {
+  void startFly() {
     isFlying = true;
     flyer.fly();
   }
 
-  void endUp() {
+  void endFly() {
     isFlying = false;
     flyer.endFly();
   }

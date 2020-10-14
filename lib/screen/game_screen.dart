@@ -95,7 +95,12 @@ class _GameScreenState extends State<GameScreen> {
               )),
         ),
         floatingActionButton: MaterialButton(
-          child: const Icon(Icons.flight_takeoff, color: Colors.white),
+          child: game.isGameOver
+              ? const Icon(
+                  Icons.refresh,
+                  color: Colors.white,
+                )
+              : const Icon(Icons.flight_takeoff, color: Colors.white),
           color: Colors.pink,
           onPressed: () {},
           onHighlightChanged: (value) {

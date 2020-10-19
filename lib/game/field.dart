@@ -1,8 +1,31 @@
+import 'package:flutter/material.dart';
 import 'package:flying_hj/game/game_object.dart';
 
-class Field {
-  final int width;
-  final List<List<GameObject>> walls;
+import 'item.dart';
 
-  Field(this.width, this.walls);
+class Field extends ChangeNotifier {
+  final List<List<GameObject>> walls = [];
+  final List<Item> items = <Item>[];
+
+  void addWalls(Iterable<Iterable<GameObject>> walls) {
+    this.walls.addAll(walls);
+
+    notifyListeners();
+  }
+
+  void clear() {
+    walls.clear();
+    items.clear();
+    notifyListeners();
+  }
+
+  void addItem(Item item) {
+    items.add(item);
+    notifyListeners();
+  }
+
+  void removeItem(Item item) {
+    items.remove(item);
+    notifyListeners();
+  }
 }

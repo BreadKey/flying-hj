@@ -7,19 +7,25 @@ import 'package:flying_hj/game/field.dart';
 import 'package:flying_hj/game/flyer.dart';
 import 'package:flying_hj/game/flyers/hyeonjung.dart';
 import 'package:flying_hj/game/game_object.dart';
+import 'package:flying_hj/game/items/straight_block.dart';
+import 'package:flying_hj/game/slope.dart';
+
+import 'item.dart';
+
+extension on double {
+  int toInterval() => this * 10 ~/ 1;
+}
 
 class FlyingGame extends ChangeNotifier {
   static const int fps = 32;
 
-  static const double gravity = -100;
-  static const double flyPower = 100;
-  static const int gameHeight = 100;
-  static const double defaultVelocityX = 100;
-  static const double defaultPathHieght = 40;
-  static const double maxVelocityX = 250;
-  static const double maxPathHeight = 70;
-  double _velocityY = 0;
-  double _velocityX = 100;
+  static const double gravity = -10;
+  static const double flyPower = 10;
+  static const int gameHeight = 15;
+  static const double defaultVelocityX = 12;
+  static const double defaultPathHieght = 7.5;
+  static const double maxVelocityX = 40;
+  static const double minPathHeight = 5.5;
 
   bool isFlying = false;
 
@@ -34,8 +40,9 @@ class FlyingGame extends ChangeNotifier {
   final _hurdleQueue = Queue<GameObject>();
   final _wallQueue = Queue<List<GameObject>>();
 
-  final fields = <Field>[];
-  Field _currentField;
+  final Field field = Field();
+  final _itemQueue = Queue<Item>();
+  final _activatedItems = List<Item>();
 
   Offset _pathStartVelocity;
   Offset _pathStartPoint;
@@ -43,46 +50,52 @@ class FlyingGame extends ChangeNotifier {
   double _previousTopSlopeHeight;
   double _previousBottomSlopeHeight;
 
-  double _pathHieght;
-
-  double _playTime;
-  double get playTime => _playTime;
+  double _pathHeight;
 
   int _currentFrame = 0;
 
+  double _levelVelocity;
+
+  double _lastAirTime;
+
   void startGame() {
     isGameOver = false;
-    _playTime = 0;
     _currentFrame = 0;
-
-    _currentField = Field(1000, []);
 
     _previousBottomSlopeHeight = null;
     _previousTopSlopeHeight = null;
 
-    _pathHieght = defaultPathHieght;
+    _pathHeight = defaultPathHieght;
 
-    fields.clear();
-    fields.add(_currentField);
+    final firstFallTime = 0.5;
 
-    flyer.x = 0;
-    flyer.y = gameHeight / 2;
+    _pathStartPoint = Offset(
+        0, gameHeight / 2 + (-gravity * firstFallTime * firstFallTime) / 2);
+
+    flyer.setPoint(_pathStartPoint);
     flyer.angle = 0;
-    _velocityX = defaultVelocityX;
-    _velocityY = 0;
+    flyer.velocityX = defaultVelocityX;
+    _levelVelocity = flyer.velocityX;
+    flyer.velocityY = 0;
 
-    _pathStartVelocity = Offset(_velocityX, 0);
-    _pathStartPoint = Offset(0, gameHeight / 2);
+    _pathStartVelocity = Offset(flyer.velocityX, 0);
 
     isFlying = false;
+
+    field.clear();
 
     _hurdleQueue.clear();
 
     _wallQueue.clear();
 
-    addNextPath(0.25, Offset(0, gravity / 2));
-    _pathStartVelocity = Offset(_velocityX, 0);
-    addNextPath(1, Offset(0, 0));
+    _itemQueue.clear();
+    _activatedItems.clear();
+
+    _lastAirTime = 0;
+
+    addNextPath(firstFallTime, Offset(0, gravity));
+
+    addStraightPath(time: 3);
     for (int i = 0; i < 10; i++) {
       addNextPathByRandom();
     }
@@ -99,54 +112,191 @@ class FlyingGame extends ChangeNotifier {
     flyer.start();
   }
 
+  @override
+  void dispose() {
+    _frameGenerator?.cancel();
+    field.dispose();
+    super.dispose();
+  }
+
+  void update() {
+    double accelerationY = (isFlying ? flyPower : gravity);
+
+    if (flyer.velocityY > 0 && !isFlying) {
+      accelerationY += gravity;
+    } else if (flyer.velocityY < 0 && isFlying) {
+      accelerationY += flyPower;
+    }
+
+    flyer.accelerationY = accelerationY;
+
+    if (_currentFrame % (fps * 5) == 0) {
+      if (flyer.velocityX < _levelVelocity) {
+        flyer.velocityX = _levelVelocity;
+      }
+
+      _levelVelocity += 1;
+      flyer.velocityX += 1;
+      _pathHeight -= 0.05;
+
+      flyer.velocityX = min(maxVelocityX, flyer.velocityX);
+      _pathHeight = max(minPathHeight, _pathHeight);
+    }
+
+    _updateItems();
+    _moveFlyer();
+    _checkGameOver();
+    _refreshWalls();
+    _checkItem();
+
+    _currentFrame++;
+
+    notifyListeners();
+  }
+
   int addNextPathByRandom() {
     final airTime = 1 / (Random().nextInt(4) + 1);
 
-    if (_pathStartPoint.dy > gameHeight) {
-      _pathStartVelocity = Offset(_velocityX, 0);
+    if (_pathStartPoint.dy > gameHeight - _pathHeight / 2) {
+      _pathStartVelocity = Offset(_levelVelocity, 0);
       return addNextPath(airTime, Offset(0, gravity / airTime));
-    } else if (_pathStartPoint.dy < _pathHieght / 2) {
-      _pathStartVelocity = Offset(_velocityX, 0);
+    } else if (_pathStartPoint.dy < _pathHeight / 2) {
+      _pathStartVelocity = Offset(_levelVelocity, 0);
       return addNextPath(airTime, Offset(0, flyPower / airTime));
     } else if (_pathStartVelocity.dy < 5 && _pathStartVelocity.dy > -5) {
       return addNextPath(airTime,
           Offset(0, (Random().nextInt(2) == 0 ? flyPower : gravity) / airTime));
     }
 
-    final accelerationY = -(_pathStartVelocity.dy +
-            (_pathHieght / flyPower / airTime) * (Random().nextInt(3) - 1)) *
-        2 /
-        airTime;
+    if (Random().nextInt(16) == 0) {
+      return addStraightPath(time: airTime * 3, smootherTime: _lastAirTime / 3);
+    }
 
-    return addNextPath(airTime, Offset(0, accelerationY));
+    final accelerationY =
+        2 * (-_pathStartVelocity.dy * airTime) / airTime / airTime;
+
+    final offsetY = ((_levelVelocity / maxVelocityX / _lastAirTime) *
+        maxVelocityX *
+        airTime *
+        10);
+
+    _lastAirTime = airTime;
+
+    return addNextPath(airTime, Offset(0, accelerationY),
+        offset: Offset(
+            0, (_pathHeight / 2) / (offsetY) * (Random().nextInt(5) - 2)));
   }
 
-  int addNextPath(double airTime, Offset acceleration) {
-    final parabola = generateParabola(
-        _pathStartPoint, _pathStartVelocity, acceleration, airTime * _velocityX,
-        interval: airTime * 15 ~/ 1);
+  int addNextPath(double airTime, Offset acceleration,
+      {Offset offset: Offset.zero}) {
+    final parabola = generateParabola(_pathStartPoint, _pathStartVelocity,
+        acceleration, airTime * _levelVelocity,
+        offset: offset, interval: airTime.toInterval());
     _pathStartPoint = parabola.last;
     _pathStartVelocity += acceleration * airTime;
 
-    final walls = generateWall(parabola..removeLast(), _pathHieght);
+    final walls = generateWall(parabola..removeLast(), _pathHeight);
+    return addWalls(walls);
+  }
 
-    _currentField.walls.addAll(walls);
+  int addStraightPath({double time: 2, double smootherTime: 0}) {
+    final int smootherPathLength = smootherTime == 0
+        ? 0
+        : addNextPath(0.5, Offset(0, -_pathStartVelocity.dy * 2));
 
+    addItem(StraightBlock(time / 2 - flyer.width / _levelVelocity)
+      ..setPoint(_pathStartPoint));
+    final goalPoint = _pathStartPoint + Offset(_levelVelocity * time, 0);
+
+    final wallParabola = generateParabola(
+        _pathStartPoint,
+        Offset(_levelVelocity, flyPower / time),
+        Offset(0, -2 * (flyPower / time) / time),
+        time * _levelVelocity,
+        interval: time.toInterval())
+      ..removeLast();
+
+    final wallWidth = wallParabola[1].dx - wallParabola[0].dx;
+
+    final walls = wallParabola.map((point) {
+      final halfPathHeight = max(_pathHeight / 2.5, _pathHeight / (6 / time));
+      final bottomSlopeHeight = max(0.0, point.dy - halfPathHeight);
+      final topSlopeHeight = max(
+          0.0,
+          gameHeight -
+              (_pathStartPoint.dy +
+                  _pathStartPoint.dy -
+                  point.dy +
+                  halfPathHeight));
+
+      final generatedWalls = [
+        Slope(wallWidth, bottomSlopeHeight,
+            previousSlopeHeight: _previousBottomSlopeHeight,
+            centerX: point.dx,
+            fromTop: false),
+        Slope(
+          wallWidth,
+          topSlopeHeight,
+          previousSlopeHeight: _previousTopSlopeHeight,
+          centerX: point.dx,
+        ),
+      ];
+
+      _previousBottomSlopeHeight = bottomSlopeHeight;
+      _previousTopSlopeHeight = topSlopeHeight;
+
+      return generatedWalls;
+    });
+
+    _pathStartPoint = goalPoint;
+    _pathStartVelocity = Offset(_levelVelocity, 0);
+
+    return addWalls(walls) + smootherPathLength;
+  }
+
+  int addWalls(Iterable<Iterable<GameObject>> walls) {
+    field.addWalls(walls);
     _wallQueue.addAll(walls);
 
     return walls.length;
   }
 
-  @override
-  void dispose() {
-    _frameGenerator?.cancel();
-    super.dispose();
+  bool isCollided(GameObject a, GameObject b) {
+    return b.height != 0 &&
+        a.right > b.left &&
+        a.left < b.right &&
+        a.top > b.bottom &&
+        a.bottom < b.top;
   }
 
-  void update() {
-    _moveFlyer();
+  void gameOver() {
+    isGameOver = true;
+    _frameGenerator.cancel();
+    flyer.dead();
+  }
 
-    if (flyer.top > (gameHeight + _pathHieght) || flyer.bottom < -_pathHieght) {
+  void _updateItems() {
+    _activatedItems.toList().forEach((item) {
+      item.activeTime -= timeDelta;
+      if (item.activeTime <= 0) {
+        _activatedItems.remove(item);
+        item.end(flyer);
+      } else {
+        item.update(flyer);
+      }
+    });
+  }
+
+  void _moveFlyer() {
+    flyer.velocityY += flyer.accelerationY * timeDelta;
+
+    flyer.x += flyer.velocityX * timeDelta;
+    flyer.y += flyer.velocityY * timeDelta;
+    flyer.angle = -flyer.velocityY / gameHeight * pi / 2;
+  }
+
+  void _checkGameOver() {
+    if (flyer.top > (gameHeight + _pathHeight) || flyer.bottom < -_pathHeight) {
       gameOver();
     }
 
@@ -179,57 +329,25 @@ class FlyingGame extends ChangeNotifier {
     if (_hurdleQueue.isEmpty && _wallQueue.isEmpty) {
       gameOver();
     }
+  }
 
-    final wallIndexInMiddle = _currentField.walls.length ~/ 2;
+  void _refreshWalls() {
+    final wallIndexInMiddle = field.walls.length ~/ 2;
 
-    if (flyer.left > _currentField.walls[wallIndexInMiddle].first.right) {
+    if (flyer.left > field.walls[wallIndexInMiddle].first.right) {
       final newWallsLength = addNextPathByRandom();
-      _currentField.walls.removeRange(0, newWallsLength);
-    }
-
-    notifyListeners();
-    _playTime += timeDelta;
-    _currentFrame++;
-
-    if (_currentFrame % (fps * 5) == 0) {
-      _velocityX += 2.5;
-      _pathHieght += 1;
-
-      _velocityX = min(maxVelocityX, _velocityX);
-      _pathHieght = min(maxPathHeight, _pathHieght);
+      field.walls.removeRange(0, newWallsLength);
     }
   }
 
-  bool isCollided(GameObject a, GameObject b) {
-    return b.height != 0 &&
-        a.right > b.left &&
-        a.left < b.right &&
-        a.top > b.bottom &&
-        a.bottom < b.top;
-  }
-
-  void gameOver() {
-    isGameOver = true;
-    _frameGenerator.cancel();
-    flyer.dead();
-  }
-
-  void _moveFlyer() {
-    double acceleration = (isFlying ? flyPower : gravity);
-
-    if (_velocityY > 0 && !isFlying) {
-      acceleration += gravity;
-    } else if (_velocityY < 0 && isFlying) {
-      acceleration += flyPower;
+  void _checkItem() {
+    if (_itemQueue.isEmpty) return;
+    final firstItem = _itemQueue.first;
+    if (isCollided(flyer, firstItem)) {
+      consumeItem(firstItem);
+    } else if (flyer.left > firstItem.right) {
+      removeItem(firstItem);
     }
-
-    acceleration *= timeDelta;
-
-    _velocityY += acceleration;
-
-    flyer.x += _velocityX * timeDelta;
-    flyer.y += _velocityY * timeDelta;
-    flyer.angle = -_velocityY / gameHeight * pi / 2;
   }
 
   void startFly() {
@@ -242,9 +360,15 @@ class FlyingGame extends ChangeNotifier {
     flyer.endFly();
   }
 
+  void consumeItem(Item item) {
+    item.active(flyer);
+    _activatedItems.add(item);
+    removeItem(item);
+  }
+
   List<Offset> generateParabola(
       Offset start, Offset startVelocity, Offset acceleration, double distance,
-      {int interval: 20}) {
+      {int interval: 20, Offset offset: Offset.zero}) {
     final time = distance / startVelocity.dx;
     final delta = time / interval;
 
@@ -255,7 +379,7 @@ class FlyingGame extends ChangeNotifier {
 
     for (int i = 0; i < interval; i++) {
       currentVelocity += acceleration * delta;
-      currentPoint += currentVelocity * delta;
+      currentPoint += currentVelocity * delta + offset;
       parabola.add(currentPoint);
     }
 
@@ -273,13 +397,11 @@ class FlyingGame extends ChangeNotifier {
       final topSlopeHeight = max(0.0, gameHeight - (point.dy + pathHeight / 2));
       final wall = [
         Slope(width, topSlopeHeight,
-            previousSlopeHeight: _previousTopSlopeHeight)
-          ..x = point.dx + width / 2
-          ..y = gameHeight - topSlopeHeight / 2,
+            previousSlopeHeight: _previousTopSlopeHeight, centerX: point.dx),
         Slope(width, bottomSlopeHeight,
-            previousSlopeHeight: _previousBottomSlopeHeight, fromTop: false)
-          ..x = point.dx + width / 2
-          ..y = bottomSlopeHeight / 2,
+            previousSlopeHeight: _previousBottomSlopeHeight,
+            fromTop: false,
+            centerX: point.dx)
       ];
 
       _previousTopSlopeHeight = topSlopeHeight;
@@ -288,52 +410,14 @@ class FlyingGame extends ChangeNotifier {
       return wall;
     });
   }
-}
 
-class Slope extends GameObject {
-  final double previousSlopeHeight;
-  final bool fromTop;
-
-  Slope(double width, double height,
-      {this.previousSlopeHeight, this.fromTop = true})
-      : super(width, height, width, height);
-
-  @override
-  Widget get sprite => CustomPaint(
-        painter: SlopePainter(this),
-      );
-}
-
-class SlopePainter extends CustomPainter {
-  final Slope slope;
-
-  SlopePainter(this.slope);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final ratio = size.width / slope.width;
-
-    canvas.scale(ratio);
-
-    final slopePath = Path();
-
-    slopePath.moveTo(
-        0,
-        !slope.fromTop
-            ? slope.height - (slope.previousSlopeHeight ?? slope.height)
-            : 0);
-    slopePath.lineTo(
-        0,
-        slope.fromTop
-            ? slope.previousSlopeHeight ?? slope.height
-            : slope.height);
-    slopePath.lineTo(slope.width + 0.1, slope.height);
-    slopePath.lineTo(slope.width + 0.1, 0);
-    slopePath.close();
-
-    canvas.drawPath(slopePath, Paint()..color = Colors.white);
+  void addItem(Item item) {
+    field.addItem(item);
+    _itemQueue.add(item);
   }
 
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  void removeItem(Item item) {
+    field.removeItem(item);
+    _itemQueue.remove(item);
+  }
 }

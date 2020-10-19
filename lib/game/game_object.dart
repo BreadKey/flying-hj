@@ -13,9 +13,14 @@ abstract class GameObject {
   double get top => y + height / 2;
   double get bottom => y - height / 2;
 
-  double x;
-  double y;
-  double angle;
+  double x = 0;
+  double y = 0;
+  double angle = 0;
 
   Widget get sprite;
+
+  void setPoint(Offset point) {
+    x = point.dx;
+    y = point.dy;
+  }
 }

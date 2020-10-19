@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flying_hj/screen/game_screen.dart';
+import 'package:flying_hj/screens/game_screen.dart';
 
 void main() {
   runApp(MyApp());
@@ -29,6 +29,7 @@ class MyApp extends StatelessWidget {
           // the app on. For desktop platforms, the controls will be smaller and
           // closer together (more dense) than on mobile platforms.
           visualDensity: VisualDensity.adaptivePlatformDensity,
+          fontFamily: "Pixel"
         ),
         home: GameScreen(),);
   }

@@ -3,7 +3,12 @@ import 'package:flying_hj/game/flyer.dart';
 import 'package:flying_hj/game/item.dart';
 
 class StraightBlock extends Item {
-  StraightBlock(double activeTime) : super(1.6, 1.6, activeTime);
+  final double airTime;
+  final double distanceX;
+  final double velocityX;
+  StraightBlock(double activeTime, this.airTime, this.distanceX)
+      : velocityX = distanceX / airTime,
+        super(1.6, 1.6, activeTime);
 
   double _lastVelocityX;
 
@@ -23,7 +28,7 @@ class StraightBlock extends Item {
   void active(Flyer flyer) {
     flyer.y = y;
     _lastVelocityX = flyer.velocityX;
-    flyer.velocityX *= 2;
+    flyer.velocityX = velocityX;
     flyer.velocityY = 0;
     flyer.accelerationY = 0;
     flyer.fly();
@@ -34,6 +39,7 @@ class StraightBlock extends Item {
     if (flyer.accelerationY < 0) {
       flyer.accelerationY = 0;
     }
+    flyer.velocityX = velocityX;
   }
 
   @override

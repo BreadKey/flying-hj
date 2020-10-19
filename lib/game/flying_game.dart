@@ -54,7 +54,7 @@ class FlyingGame extends ChangeNotifier {
 
   int _currentFrame = 0;
 
-  double _levelVelocity;
+  double _levelVelocityX;
 
   double _lastAirTime;
 
@@ -75,7 +75,7 @@ class FlyingGame extends ChangeNotifier {
     flyer.setPoint(_pathStartPoint);
     flyer.angle = 0;
     flyer.velocityX = defaultVelocityX;
-    _levelVelocity = flyer.velocityX;
+    _levelVelocityX = flyer.velocityX;
     flyer.velocityY = 0;
 
     _pathStartVelocity = Offset(flyer.velocityX, 0);
@@ -131,11 +131,11 @@ class FlyingGame extends ChangeNotifier {
     flyer.accelerationY = accelerationY;
 
     if (_currentFrame % (fps * 5) == 0) {
-      if (flyer.velocityX < _levelVelocity) {
-        flyer.velocityX = _levelVelocity;
+      if (flyer.velocityX < _levelVelocityX) {
+        flyer.velocityX = _levelVelocityX;
       }
 
-      _levelVelocity += 1;
+      _levelVelocityX += 1;
       flyer.velocityX += 1;
       _pathHeight -= 0.05;
 
@@ -158,10 +158,10 @@ class FlyingGame extends ChangeNotifier {
     final airTime = 1 / (Random().nextInt(4) + 1);
 
     if (_pathStartPoint.dy > gameHeight - _pathHeight / 2) {
-      _pathStartVelocity = Offset(_levelVelocity, 0);
+      _pathStartVelocity = Offset(_levelVelocityX, 0);
       return addNextPath(airTime, Offset(0, gravity / airTime));
     } else if (_pathStartPoint.dy < _pathHeight / 2) {
-      _pathStartVelocity = Offset(_levelVelocity, 0);
+      _pathStartVelocity = Offset(_levelVelocityX, 0);
       return addNextPath(airTime, Offset(0, flyPower / airTime));
     } else if (_pathStartVelocity.dy < 5 && _pathStartVelocity.dy > -5) {
       return addNextPath(airTime,
@@ -175,7 +175,7 @@ class FlyingGame extends ChangeNotifier {
     final accelerationY =
         2 * (-_pathStartVelocity.dy * airTime) / airTime / airTime;
 
-    final offsetY = ((_levelVelocity / maxVelocityX / _lastAirTime) *
+    final offsetY = ((_levelVelocityX / maxVelocityX / _lastAirTime) *
         maxVelocityX *
         airTime *
         10);
@@ -190,7 +190,7 @@ class FlyingGame extends ChangeNotifier {
   int addNextPath(double airTime, Offset acceleration,
       {Offset offset: Offset.zero}) {
     final parabola = generateParabola(_pathStartPoint, _pathStartVelocity,
-        acceleration, airTime * _levelVelocity,
+        acceleration, airTime * _levelVelocityX,
         offset: offset, interval: airTime.toInterval());
     _pathStartPoint = parabola.last;
     _pathStartVelocity += acceleration * airTime;
@@ -204,9 +204,9 @@ class FlyingGame extends ChangeNotifier {
         ? 0
         : addNextPath(0.5, Offset(0, -_pathStartVelocity.dy * 2));
 
-    addItem(StraightBlock(time / 2 - flyer.width / _levelVelocity)
+    addItem(StraightBlock(time / 2, time / 2, _levelVelocityX * time - flyer.width * 2)
       ..setPoint(_pathStartPoint));
-    final goalPoint = _pathStartPoint + Offset(_levelVelocity * time, 0);
+    final goalPoint = _pathStartPoint + Offset(_levelVelocityX * time, 0);
 
     final minHeight = _pathHeight + flyer.height * 2;
 
@@ -214,9 +214,9 @@ class FlyingGame extends ChangeNotifier {
 
     final wallParabola = generateParabola(
         _pathStartPoint,
-        Offset(_levelVelocity, startVelocityY),
+        Offset(_levelVelocityX, startVelocityY),
         Offset(0, -2 * startVelocityY / time),
-        time * _levelVelocity,
+        time * _levelVelocityX,
         interval: time.toInterval())
       ..removeLast();
 
@@ -253,7 +253,7 @@ class FlyingGame extends ChangeNotifier {
     });
 
     _pathStartPoint = goalPoint;
-    _pathStartVelocity = Offset(_levelVelocity, 0);
+    _pathStartVelocity = Offset(_levelVelocityX, 0);
 
     return addWalls(walls) + smootherPathLength;
   }

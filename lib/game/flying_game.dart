@@ -19,8 +19,8 @@ extension on double {
 class FlyingGame extends ChangeNotifier {
   static const int fps = 32;
 
-  static const double gravity = -10;
-  static const double flyPower = 10;
+  static const double gravity = -12;
+  static const double flyPower = 12;
   static const int gameHeight = 15;
   static const double defaultVelocityX = 12;
   static const double defaultPathHieght = 7.5;
@@ -210,8 +210,8 @@ class FlyingGame extends ChangeNotifier {
 
     final wallParabola = generateParabola(
         _pathStartPoint,
-        Offset(_levelVelocity, flyPower / time),
-        Offset(0, -2 * (flyPower / time) / time),
+        Offset(_levelVelocity, flyPower * 0.75 / time),
+        Offset(0, -2 * (flyPower * 0.75 / time) / time),
         time * _levelVelocity,
         interval: time.toInterval())
       ..removeLast();

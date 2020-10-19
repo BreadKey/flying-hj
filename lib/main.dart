@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flying_hj/screen/game_screen.dart';
+import 'package:flying_hj/screens/game_screen.dart';
 
 void main() {
   runApp(MyApp());

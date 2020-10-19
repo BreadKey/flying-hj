@@ -208,10 +208,14 @@ class FlyingGame extends ChangeNotifier {
       ..setPoint(_pathStartPoint));
     final goalPoint = _pathStartPoint + Offset(_levelVelocity * time, 0);
 
+    final minHeight = _pathHeight - flyer.height * 2;
+
+    final startVelocityY = minHeight / (time / 2);
+
     final wallParabola = generateParabola(
         _pathStartPoint,
-        Offset(_levelVelocity, flyPower * 0.75 / time),
-        Offset(0, -2 * (flyPower * 0.75 / time) / time),
+        Offset(_levelVelocity, startVelocityY),
+        Offset(0, - 2 * startVelocityY / time),
         time * _levelVelocity,
         interval: time.toInterval())
       ..removeLast();

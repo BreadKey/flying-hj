@@ -11,20 +11,23 @@ class GameScreen extends StatefulWidget {
 class _GameScreenState extends State<GameScreen> {
   FlyingGame game;
 
-  double gameRatio;
+  double gameRatio = 1;
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
+  void initState() {
+    super.initState();
     game = FlyingGame();
-
-    gameRatio = MediaQuery.of(context).size.height / FlyingGame.gameHeight;
-
     game.startGame();
 
     game.addListener(() {
       setState(() {});
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    gameRatio = MediaQuery.of(context).size.height / FlyingGame.gameHeight;
   }
 
   @override

@@ -19,7 +19,7 @@ void main() {
 
     List<Offset> parabola = game.generateParabola(
         Offset(0, 0), velocity, acceleration, moveDistnace,
-        interval: moveDistnace * 5 ~/ 1);
+        unitX: moveDistnace / 5);
 
     printParabola(parabola);
 
@@ -30,7 +30,7 @@ void main() {
 
     parabola = game.generateParabola(
         parabola.last, velocity, acceleration, moveDistnace,
-        interval: moveDistnace * 5 ~/ 1);
+        unitX: moveDistnace / 5);
 
     printParabola(parabola);
 
@@ -40,7 +40,7 @@ void main() {
 
     parabola = game.generateParabola(
         parabola.last, velocity, acceleration, moveDistnace,
-        interval: moveDistnace * 5 ~/ 1);
+        unitX: moveDistnace / 5);
 
     printParabola(parabola);
   });

@@ -9,12 +9,9 @@ import 'package:flying_hj/game/flyers/hyeonjung.dart';
 import 'package:flying_hj/game/game_object.dart';
 import 'package:flying_hj/game/items/straight_block.dart';
 import 'package:flying_hj/game/slope.dart';
+import 'package:flying_hj/game/slopes/building.dart';
 
 import 'item.dart';
-
-extension on double {
-  int toInterval() => this * 10 ~/ 1;
-}
 
 class FlyingGame extends ChangeNotifier {
   static const int fps = 32;
@@ -48,7 +45,7 @@ class FlyingGame extends ChangeNotifier {
   Offset _pathStartPoint;
 
   double _previousTopSlopeHeight;
-  double _previousBottomSlopeHeight;
+  double _previousBuildingHeight;
 
   double _pathHeight;
 
@@ -62,7 +59,7 @@ class FlyingGame extends ChangeNotifier {
     isGameOver = false;
     _currentFrame = 0;
 
-    _previousBottomSlopeHeight = null;
+    _previousBuildingHeight = null;
     _previousTopSlopeHeight = null;
 
     _pathHeight = defaultPathHieght;
@@ -191,7 +188,7 @@ class FlyingGame extends ChangeNotifier {
       {Offset offset: Offset.zero}) {
     final parabola = generateParabola(_pathStartPoint, _pathStartVelocity,
         acceleration, airTime * _levelVelocityX,
-        offset: offset, interval: airTime.toInterval());
+        offset: offset);
     _pathStartPoint = parabola.last;
     _pathStartVelocity += acceleration * airTime;
 
@@ -204,7 +201,8 @@ class FlyingGame extends ChangeNotifier {
         ? 0
         : addNextPath(0.5, Offset(0, -_pathStartVelocity.dy * 2));
 
-    addItem(StraightBlock(time / 2, time / 2, _levelVelocityX * time - flyer.width * 2)
+    addItem(StraightBlock(
+        time / 2, time / 2, _levelVelocityX * time - flyer.width * 2)
       ..setPoint(_pathStartPoint));
     final goalPoint = _pathStartPoint + Offset(_levelVelocityX * time, 0);
 
@@ -213,18 +211,19 @@ class FlyingGame extends ChangeNotifier {
     final startVelocityY = minHeight / time;
 
     final wallParabola = generateParabola(
-        _pathStartPoint,
-        Offset(_levelVelocityX, startVelocityY),
-        Offset(0, -2 * startVelocityY / time),
-        time * _levelVelocityX,
-        interval: time.toInterval())
-      ..removeLast();
+      _pathStartPoint,
+      Offset(_levelVelocityX, startVelocityY),
+      Offset(0, -2 * startVelocityY / time),
+      time * _levelVelocityX,
+    )..removeLast();
 
     final wallWidth = wallParabola[1].dx - wallParabola[0].dx;
 
     final walls = wallParabola.map((point) {
       final halfPathHeight = max(_pathHeight / 2.5, _pathHeight / (6 / time));
-      final bottomSlopeHeight = max(0.0, point.dy - halfPathHeight);
+      final buildingHeight =
+          calculateBuildingHeight(point.dy, halfPathHeight);
+
       final topSlopeHeight = max(
           0.0,
           gameHeight -
@@ -234,19 +233,17 @@ class FlyingGame extends ChangeNotifier {
                   halfPathHeight));
 
       final generatedWalls = [
-        Slope(wallWidth, bottomSlopeHeight,
-            previousSlopeHeight: _previousBottomSlopeHeight,
-            centerX: point.dx,
-            fromTop: false),
         Slope(
           wallWidth,
           topSlopeHeight,
           previousSlopeHeight: _previousTopSlopeHeight,
           centerX: point.dx,
         ),
+        Building(wallWidth, buildingHeight,
+            previousBuildingHeight: _previousBuildingHeight, centerX: point.dx),
       ];
 
-      _previousBottomSlopeHeight = bottomSlopeHeight;
+      _previousBuildingHeight = buildingHeight;
       _previousTopSlopeHeight = topSlopeHeight;
 
       return generatedWalls;
@@ -336,11 +333,11 @@ class FlyingGame extends ChangeNotifier {
   }
 
   void _refreshWalls() {
-    final wallIndexInMiddle = field.walls.length ~/ 2;
+    final wallIndexInQuarter = field.walls.length ~/ 8;
 
-    if (flyer.left > field.walls[wallIndexInMiddle].first.right) {
-      final newWallsLength = addNextPathByRandom();
-      field.walls.removeRange(0, newWallsLength);
+    if (flyer.left > field.walls[wallIndexInQuarter].first.right) {
+      addNextPathByRandom();
+      field.walls.removeRange(0, wallIndexInQuarter);
     }
   }
 
@@ -372,7 +369,8 @@ class FlyingGame extends ChangeNotifier {
 
   List<Offset> generateParabola(
       Offset start, Offset startVelocity, Offset acceleration, double distance,
-      {int interval: 20, Offset offset: Offset.zero}) {
+      {double unitX: 1.5, Offset offset: Offset.zero}) {
+    final interval = distance ~/ unitX;
     final time = distance / startVelocity.dx;
     final delta = time / interval;
 
@@ -397,22 +395,33 @@ class FlyingGame extends ChangeNotifier {
     final width = path[1].dx - path[0].dx;
 
     return path.map((point) {
-      final bottomSlopeHeight = max(0.0, point.dy - pathHeight / 2);
+      final buildingHeight =
+          calculateBuildingHeight(point.dy, pathHeight / 2);
+
       final topSlopeHeight = max(0.0, gameHeight - (point.dy + pathHeight / 2));
       final wall = [
         Slope(width, topSlopeHeight,
             previousSlopeHeight: _previousTopSlopeHeight, centerX: point.dx),
-        Slope(width, bottomSlopeHeight,
-            previousSlopeHeight: _previousBottomSlopeHeight,
-            fromTop: false,
-            centerX: point.dx)
+        Building(width, buildingHeight,
+            previousBuildingHeight: _previousBuildingHeight, centerX: point.dx)
       ];
 
       _previousTopSlopeHeight = topSlopeHeight;
-      _previousBottomSlopeHeight = bottomSlopeHeight;
+      _previousBuildingHeight = buildingHeight;
 
       return wall;
     });
+  }
+
+  double calculateBuildingHeight(double y, double pathHeight) {
+    final buildingHeight = max(0.0, y - pathHeight);
+
+    if (buildingHeight != 0 &&_previousBuildingHeight != null &&
+        (buildingHeight - _previousBuildingHeight).abs() < 0.5) {
+      return _previousBuildingHeight;
+    }
+
+    return buildingHeight;
   }
 
   void addItem(Item item) {

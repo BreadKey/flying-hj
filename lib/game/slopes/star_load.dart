@@ -7,6 +7,7 @@ import 'package:flying_hj/game/slope.dart';
 class StarLoad extends Slope {
   double starSize;
   bool hasLight;
+  final List<Offset> load = [Offset.zero];
   StarLoad(double width, double height,
       {double previousSlopeHeight, double centerX})
       : super(width, height,
@@ -15,6 +16,11 @@ class StarLoad extends Slope {
             fromTop: true) {
     starSize = 0.6 / (Random().nextInt(6) + 1);
     hasLight = Random().nextInt(10) == 0;
+
+    for (int _ = 0; _ < Random().nextInt(5) + 1; _++) {
+      load.add(
+          Offset((Random().nextInt(11) - 7) / 5, -15 / Random().nextInt(10)));
+    }
   }
 
   @override
@@ -36,7 +42,7 @@ class _StarLoadPainter extends CustomPainter {
           ..moveTo(0, 0)
           ..lineTo(starLoad.starSize, 0)
           ..moveTo(starLoad.starSize / 2, -starLoad.starSize / 2)
-          ..lineTo(starLoad.starSize / 2, starLoad.starSize / 2);
+          ..lineTo(starLoad.starSize / 2, starLoad.starSize / 2) {}
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -47,8 +53,15 @@ class _StarLoadPainter extends CustomPainter {
     canvas.scale(ratio);
 
     canvas.translate(starLoad.width, starLoad.height);
-    canvas.drawPath(starPath,
-        _paint..color = starLoad.hasLight ? colorSamoanSun : colorBlueStone);
+
+    starLoad.load.forEach((point) {
+      canvas.save();
+      canvas.translate(point.dx, point.dy);
+
+      canvas.drawPath(starPath,
+          _paint..color = starLoad.hasLight ? colorSamoanSun : colorBlueBlizzard);
+      canvas.restore();
+    });
   }
 
   @override

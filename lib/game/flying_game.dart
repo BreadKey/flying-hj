@@ -8,18 +8,19 @@ import 'package:flying_hj/game/flyer.dart';
 import 'package:flying_hj/game/flyers/hyeonjung.dart';
 import 'package:flying_hj/game/game_object.dart';
 import 'package:flying_hj/game/items/straight_block.dart';
-import 'package:flying_hj/game/slope.dart';
+import 'package:flying_hj/game/moon.dart';
 import 'package:flying_hj/game/slopes/bridge.dart';
 import 'package:flying_hj/game/slopes/building.dart';
+import 'package:flying_hj/game/slopes/star_load.dart';
 
 import 'item.dart';
 
 class FlyingGame extends ChangeNotifier {
-  static const int fps = 32;
+  static const int fps = 50;
 
   static const double gravity = -13;
   static const double flyPower = 13;
-  static const int gameHeight = 15;
+  static const double gameHeight = 15;
   static const double defaultVelocityX = 12;
   static const double defaultPathHieght = 7.5;
   static const double maxVelocityX = 40;
@@ -28,7 +29,7 @@ class FlyingGame extends ChangeNotifier {
 
   bool isFlying = false;
 
-  final timeDelta = 1 / fps;
+  double timeDelta = 1 / fps;
 
   Flyer flyer = Hyeonjung();
 
@@ -51,15 +52,17 @@ class FlyingGame extends ChangeNotifier {
 
   double _pathHeight;
 
-  int _currentFrame = 0;
-
   double _levelVelocityX;
 
   double _lastAirTime;
 
+  int lastTimeStamp;
+  double accTime = 0;
+
+  final Moon moon = Moon();
+
   void startGame() {
     isGameOver = false;
-    _currentFrame = 0;
 
     _previousBuildingHeight = null;
     _previousTopSlopeHeight = null;
@@ -92,6 +95,10 @@ class FlyingGame extends ChangeNotifier {
 
     _lastAirTime = 0;
 
+    accTime = 0;
+
+    moon.setPoint(Offset(gameHeight * 1.618, gameHeight - moon.height / 2));
+
     addNextPath(firstFallTime, Offset(0, gravity));
 
     addStraightPath(time: 3);
@@ -99,6 +106,8 @@ class FlyingGame extends ChangeNotifier {
       addNextPathByRandom();
     }
 
+    timeDelta = 1 / fps;
+    lastTimeStamp = null;
     _frameGenerator =
         Timer.periodic(const Duration(microseconds: 1000000 ~/ fps), (_) {
       try {
@@ -115,10 +124,22 @@ class FlyingGame extends ChangeNotifier {
   void dispose() {
     _frameGenerator?.cancel();
     field.dispose();
+    moon.dispose();
     super.dispose();
   }
 
   void update() {
+    final currentTimeStamp = DateTime.now().millisecondsSinceEpoch;
+
+    if (lastTimeStamp != null) {
+      timeDelta = (currentTimeStamp - lastTimeStamp) / 1000;
+
+      if (timeDelta > 1) {
+        timeDelta = 1 / fps;
+        lastTimeStamp = null;
+        return;
+      }
+    }
     double accelerationY = (isFlying ? flyPower : gravity);
 
     if (flyer.velocityY > 0 && !isFlying) {
@@ -129,7 +150,7 @@ class FlyingGame extends ChangeNotifier {
 
     flyer.accelerationY = accelerationY;
 
-    if (_currentFrame % (fps * 5) == 0) {
+    if (accTime > 5) {
       if (flyer.velocityX < _levelVelocityX) {
         flyer.velocityX = _levelVelocityX;
       }
@@ -140,6 +161,10 @@ class FlyingGame extends ChangeNotifier {
 
       flyer.velocityX = min(maxVelocityX, flyer.velocityX);
       _pathHeight = max(minPathHeight, _pathHeight);
+
+      moon.setPoint(Offset(moon.x - 0.1, moon.y));
+
+      accTime -= 5;
     }
 
     _updateItems();
@@ -148,9 +173,10 @@ class FlyingGame extends ChangeNotifier {
     _refreshWalls();
     _checkItem();
 
-    _currentFrame++;
+    accTime += timeDelta;
 
     notifyListeners();
+    lastTimeStamp = currentTimeStamp;
   }
 
   int addNextPathByRandom() {
@@ -228,12 +254,12 @@ class FlyingGame extends ChangeNotifier {
     final halfPathHeight = max(_pathHeight / 2.5, _pathHeight / (6 / time));
 
     final walls = generateWall(
-        path,
-        wallParabola
-            .map((point) => _pathStartPoint.dy - point.dy + halfPathHeight)
-            .toList()
-              ..add(halfPathHeight),
-        bridgeDice: 5);
+      path,
+      wallParabola
+          .map((point) => _pathStartPoint.dy - point.dy + halfPathHeight)
+          .toList()
+            ..add(halfPathHeight),
+    );
 
     _pathStartPoint = goalPoint;
     _pathStartVelocity = Offset(_levelVelocityX, 0);
@@ -319,11 +345,11 @@ class FlyingGame extends ChangeNotifier {
   }
 
   void _refreshWalls() {
-    final wallIndexInQuarter = field.walls.length ~/ 8;
+    final checkPointIndex = field.walls.length ~/ 8;
 
-    if (flyer.left > field.walls[wallIndexInQuarter].first.right) {
+    if (flyer.left > field.walls[checkPointIndex].first.right) {
       addNextPathByRandom();
-      field.walls.removeRange(0, wallIndexInQuarter);
+      field.walls.removeRange(0, checkPointIndex);
     }
   }
 
@@ -376,7 +402,7 @@ class FlyingGame extends ChangeNotifier {
 
   Iterable<List<GameObject>> generateWall(
       List<Offset> path, List<double> pathHeights,
-      {int bridgeDice = 2}) {
+      {int bridgeDice = 5}) {
     assert(path.length >= 2);
 
     final width = path[1].dx - path[0].dx;
@@ -416,23 +442,24 @@ class FlyingGame extends ChangeNotifier {
         } else if (isBridge) {
           if (index == path.length - 1) {
             isBridge = false;
+            previousWasBridge = true;
           } else if (index < path.length - 2) {
             if (path[index + 1].dy -
                     pathHeights[index + 1] +
                     sameBuildingError <
                 bridgeStartY) isBridge = false;
+            previousWasBridge = true;
           }
         }
       } else {
         if (isBridge == true) {
-          isBridge = false;
           isBridge = null;
           previousWasBridge = true;
         }
       }
 
       final generatedWalls = [
-        Slope(
+        StarLoad(
           width,
           topSlopeHeight,
           previousSlopeHeight: _previousTopSlopeHeight,
@@ -442,7 +469,7 @@ class FlyingGame extends ChangeNotifier {
             ? Bridge(width, buildingHeight, centerX: point.dx)
             : Building(width, buildingHeight,
                 previousBuildingHeight: _previousBuildingHeight,
-                canHasLightingLoad: !previousWasBridge,
+                canHaveLightingLoad: !previousWasBridge,
                 centerX: point.dx),
       ];
 

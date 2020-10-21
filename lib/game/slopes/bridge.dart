@@ -37,6 +37,12 @@ class _BridgePainter extends CustomPainter {
       ..lineTo(size.width, 0);
 
     canvas.drawPath(bridgePath, paint);
+
+    if (size.height > size.width * 4) {
+      paint.style = PaintingStyle.fill;
+      canvas.drawRect(
+          Rect.fromLTWH(0, size.width * 2, size.width, size.height), paint);
+    }
   }
 
   @override

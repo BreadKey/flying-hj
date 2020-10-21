@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flying_hj/colors.dart';
 import 'package:flying_hj/game/field.dart';
 import 'package:flying_hj/game/flying_game.dart';
+import 'package:flying_hj/game/moon.dart';
 import 'package:flying_hj/screens/game_object_renderer.dart';
 import 'package:provider/provider.dart';
 
@@ -45,6 +46,18 @@ class _GameScreenState extends State<GameScreen> {
               height: FlyingGame.gameHeight * gameRatio,
               child: Stack(
                 children: [
+                  Align(
+                      key: ValueKey("moon"),
+                      alignment: Alignment.bottomLeft,
+                      child: ChangeNotifierProvider.value(
+                        value: game.moon,
+                        child: Consumer<Moon>(
+                          builder: (context, moon, _) => GameObjectRenderer(
+                              key: ValueKey(moon),
+                              gameObject: moon,
+                              gameRatio: gameRatio),
+                        ),
+                      )),
                   Align(
                       key: ValueKey("field"),
                       alignment: Alignment.bottomLeft,

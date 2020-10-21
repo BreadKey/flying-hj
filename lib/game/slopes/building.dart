@@ -16,7 +16,7 @@ class Building extends Slope {
       {double previousBuildingHeight,
       bool fromTop = false,
       double centerX,
-      bool canHasLightingLoad})
+      bool canHaveLightingLoad})
       : super(width, height,
             previousSlopeHeight: previousBuildingHeight,
             fromTop: fromTop,
@@ -31,7 +31,7 @@ class Building extends Slope {
       }
     }
 
-    hasLightingLoad = canHasLightingLoad && Random().nextInt(20) == 0;
+    hasLightingLoad = canHaveLightingLoad && Random().nextInt(20) == 0;
   }
 
   @override
@@ -43,8 +43,11 @@ class Building extends Slope {
 }
 
 class _BuildingPainter extends CustomPainter {
+  static const windowStrokeWidth = 0.4;
   final Building building;
   final Rect buildingRect;
+
+  final _paint = Paint();
 
   _BuildingPainter(this.building)
       : this.buildingRect = Rect.fromLTWH(
@@ -56,53 +59,50 @@ class _BuildingPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final ratio = size.width / building.width;
-    final paint = Paint();
 
     canvas.scale(ratio);
 
-    paint.color = colorOuterSpace;
+    _paint.strokeWidth = windowStrokeWidth;
+    _paint.color = colorOuterSpace;
+    _paint.strokeCap = StrokeCap.butt;
 
-    canvas.drawRect(buildingRect, paint);
-
-    final windowStrokeWidth = building.width / 3;
-
-    paint.strokeWidth = windowStrokeWidth;
+    canvas.drawRect(buildingRect, _paint);
 
     for (int i = 0; i < building.lights.length; i++) {
       final column = i % 2;
       final row = i ~/ 2;
       bool isLightOn = building.lights[i];
 
-      paint.color = isLightOn ? colorSamoanSun : colorBlueStone;
+      _paint.color = isLightOn ? colorSamoanSun : colorBlueStone;
 
       final x = building.width / 4 * (column * 2 + 1);
       final y = buildingRect.top + windowStrokeWidth * (row * 2 + 1);
 
       canvas.drawLine(
-          Offset(x, y), Offset(x, y + windowStrokeWidth * 1.2), paint);
+          Offset(x, y), Offset(x, y + windowStrokeWidth * 1.2), _paint);
     }
 
     if (building.hasGuideLight) {
-      paint.strokeCap = StrokeCap.round;
-      paint.strokeWidth = windowStrokeWidth / 2;
-      paint.color = colorFlameScarlet;
+      _paint.strokeCap = StrokeCap.round;
+      _paint.strokeWidth = windowStrokeWidth / 2;
+      _paint.color = colorFlameScarlet;
       if (building.previousSlopeHeight != null &&
           building.previousSlopeHeight > building.height) {
         canvas.drawPoints(PointMode.points,
-            [Offset(building.width - 0.1, buildingRect.top)], paint);
+            [Offset(building.width - 0.1, buildingRect.top)], _paint);
       } else {
         canvas.drawPoints(
-            PointMode.points, [Offset(0.1, buildingRect.top)], paint);
+            PointMode.points, [Offset(0.1, buildingRect.top)], _paint);
       }
     }
 
     if (building.hasLightingLoad) {
-      paint.strokeCap = StrokeCap.square;
-      paint.color = colorOuterSpace;
-      paint.strokeWidth = windowStrokeWidth / 4;
+      _paint.strokeCap = StrokeCap.square;
+      _paint.color = colorOuterSpace;
+      _paint.strokeWidth = windowStrokeWidth / 4;
 
       canvas.drawLine(Offset(windowStrokeWidth, 0),
-          Offset(windowStrokeWidth, lightingLoadHeight), paint);
+          Offset(windowStrokeWidth, lightingLoadHeight), _paint);
     }
   }
 

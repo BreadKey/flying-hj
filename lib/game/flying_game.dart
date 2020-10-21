@@ -9,6 +9,7 @@ import 'package:flying_hj/game/flyers/hyeonjung.dart';
 import 'package:flying_hj/game/game_object.dart';
 import 'package:flying_hj/game/items/straight_block.dart';
 import 'package:flying_hj/game/slope.dart';
+import 'package:flying_hj/game/slopes/bridge.dart';
 import 'package:flying_hj/game/slopes/building.dart';
 
 import 'item.dart';
@@ -23,6 +24,7 @@ class FlyingGame extends ChangeNotifier {
   static const double defaultPathHieght = 7.5;
   static const double maxVelocityX = 40;
   static const double minPathHeight = 5.5;
+  static const double sameBuildingError = 0.5;
 
   bool isFlying = false;
 
@@ -192,7 +194,8 @@ class FlyingGame extends ChangeNotifier {
     _pathStartPoint = parabola.last;
     _pathStartVelocity += acceleration * airTime;
 
-    final walls = generateWall(parabola..removeLast(), _pathHeight);
+    final walls = generateWall(
+        parabola..removeLast(), parabola.map((_) => _pathHeight / 2).toList());
     return addWalls(walls);
   }
 
@@ -217,37 +220,20 @@ class FlyingGame extends ChangeNotifier {
       time * _levelVelocityX,
     )..removeLast();
 
-    final wallWidth = wallParabola[1].dx - wallParabola[0].dx;
+    final deltaX = (goalPoint.dx - _pathStartPoint.dx) / (wallParabola.length);
 
-    final walls = wallParabola.map((point) {
-      final halfPathHeight = max(_pathHeight / 2.5, _pathHeight / (6 / time));
-      final buildingHeight =
-          calculateBuildingHeight(point.dy, halfPathHeight);
+    final path = List.generate(wallParabola.length,
+        (index) => _pathStartPoint + Offset(deltaX * index, 0));
 
-      final topSlopeHeight = max(
-          0.0,
-          gameHeight -
-              (_pathStartPoint.dy +
-                  _pathStartPoint.dy -
-                  point.dy +
-                  halfPathHeight));
+    final halfPathHeight = max(_pathHeight / 2.5, _pathHeight / (6 / time));
 
-      final generatedWalls = [
-        Slope(
-          wallWidth,
-          topSlopeHeight,
-          previousSlopeHeight: _previousTopSlopeHeight,
-          centerX: point.dx,
-        ),
-        Building(wallWidth, buildingHeight,
-            previousBuildingHeight: _previousBuildingHeight, centerX: point.dx),
-      ];
-
-      _previousBuildingHeight = buildingHeight;
-      _previousTopSlopeHeight = topSlopeHeight;
-
-      return generatedWalls;
-    });
+    final walls = generateWall(
+        path,
+        wallParabola
+            .map((point) => _pathStartPoint.dy - point.dy + halfPathHeight)
+            .toList()
+              ..add(halfPathHeight),
+        bridgeDice: 5);
 
     _pathStartPoint = goalPoint;
     _pathStartVelocity = Offset(_levelVelocityX, 0);
@@ -389,35 +375,99 @@ class FlyingGame extends ChangeNotifier {
   }
 
   Iterable<List<GameObject>> generateWall(
-      List<Offset> path, double pathHeight) {
+      List<Offset> path, List<double> pathHeights,
+      {int bridgeDice = 2}) {
     assert(path.length >= 2);
 
     final width = path[1].dx - path[0].dx;
 
-    return path.map((point) {
-      final buildingHeight =
-          calculateBuildingHeight(point.dy, pathHeight / 2);
+    bool isBridge;
+    bool previousWasBridge = false;
+    double bridgeStartY;
 
-      final topSlopeHeight = max(0.0, gameHeight - (point.dy + pathHeight / 2));
-      final wall = [
-        Slope(width, topSlopeHeight,
-            previousSlopeHeight: _previousTopSlopeHeight, centerX: point.dx),
-        Building(width, buildingHeight,
-            previousBuildingHeight: _previousBuildingHeight, centerX: point.dx)
+    final walls = <List<GameObject>>[];
+
+    for (int index = 0; index < path.length; index++) {
+      final point = path[index];
+
+      final buildingHeight =
+          calculateBuildingHeight(point.dy, pathHeights[index]);
+
+      final topSlopeHeight =
+          max(0.0, gameHeight - (point.dy + pathHeights[index]));
+
+      if (previousWasBridge) {
+        previousWasBridge = false;
+      }
+
+      if (buildingHeight == _previousBuildingHeight) {
+        if (isBridge == null) {
+          isBridge = canBeBridge(
+                  walls,
+                  List.generate(path.length,
+                      (index) => path[index].dy - pathHeights[index]),
+                  index) &&
+              Random().nextInt(bridgeDice) == 0;
+          if (isBridge) {
+            bridgeStartY = point.dy - pathHeights[index];
+          } else {
+            isBridge = null;
+          }
+        } else if (isBridge) {
+          if (index == path.length - 1) {
+            isBridge = false;
+          } else if (index < path.length - 2) {
+            if (path[index + 1].dy -
+                    pathHeights[index + 1] +
+                    sameBuildingError <
+                bridgeStartY) isBridge = false;
+          }
+        }
+      } else {
+        if (isBridge == true) {
+          isBridge = false;
+          isBridge = null;
+          previousWasBridge = true;
+        }
+      }
+
+      final generatedWalls = [
+        Slope(
+          width,
+          topSlopeHeight,
+          previousSlopeHeight: _previousTopSlopeHeight,
+          centerX: point.dx,
+        ),
+        isBridge == true
+            ? Bridge(width, buildingHeight, centerX: point.dx)
+            : Building(width, buildingHeight,
+                previousBuildingHeight: _previousBuildingHeight,
+                canHasLightingLoad: !previousWasBridge,
+                centerX: point.dx),
       ];
 
-      _previousTopSlopeHeight = topSlopeHeight;
       _previousBuildingHeight = buildingHeight;
+      _previousTopSlopeHeight = topSlopeHeight;
 
-      return wall;
-    });
+      walls.add(generatedWalls);
+    }
+
+    return walls;
   }
+
+  bool canBeBridge(Iterable<List<GameObject>> walls,
+          List<double> buildingHeights, index) =>
+      index < buildingHeights.length - 2 &&
+      buildingHeights[index + 1] > buildingHeights[index] &&
+      walls.isNotEmpty &&
+      !(walls.last.last as Building).hasLightingLoad;
 
   double calculateBuildingHeight(double y, double pathHeight) {
     final buildingHeight = max(0.0, y - pathHeight);
 
-    if (buildingHeight != 0 &&_previousBuildingHeight != null &&
-        (buildingHeight - _previousBuildingHeight).abs() < 0.5) {
+    if (buildingHeight != 0 &&
+        _previousBuildingHeight != null &&
+        (buildingHeight - _previousBuildingHeight).abs() < sameBuildingError) {
       return _previousBuildingHeight;
     }
 

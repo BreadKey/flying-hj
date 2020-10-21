@@ -13,7 +13,10 @@ class Building extends Slope {
   bool hasLightingLoad;
 
   Building(double width, double height,
-      {double previousBuildingHeight, bool fromTop = false, double centerX})
+      {double previousBuildingHeight,
+      bool fromTop = false,
+      double centerX,
+      bool canHasLightingLoad})
       : super(width, height,
             previousSlopeHeight: previousBuildingHeight,
             fromTop: fromTop,
@@ -28,7 +31,7 @@ class Building extends Slope {
       }
     }
 
-    hasLightingLoad = Random().nextInt(20) == 0;
+    hasLightingLoad = canHasLightingLoad && Random().nextInt(20) == 0;
   }
 
   @override

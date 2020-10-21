@@ -21,12 +21,16 @@ class StarLoad extends Slope {
       load.add(
           Offset((Random().nextInt(11) - 7) / 5, -15 / Random().nextInt(10)));
     }
+
+    _sprite = CustomPaint(
+      painter: _StarLoadPainter(this),
+    );
   }
 
+  Widget _sprite;
+
   @override
-  Widget get sprite => CustomPaint(
-        painter: _StarLoadPainter(this),
-      );
+  Widget get sprite => _sprite;
 }
 
 class _StarLoadPainter extends CustomPainter {
@@ -58,8 +62,10 @@ class _StarLoadPainter extends CustomPainter {
       canvas.save();
       canvas.translate(point.dx, point.dy);
 
-      canvas.drawPath(starPath,
-          _paint..color = starLoad.hasLight ? colorSamoanSun : colorBlueBlizzard);
+      canvas.drawPath(
+          starPath,
+          _paint
+            ..color = starLoad.hasLight ? colorSamoanSun : colorBlueBlizzard);
       canvas.restore();
     });
   }

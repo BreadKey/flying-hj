@@ -32,14 +32,17 @@ class Building extends Slope {
     }
 
     hasLightingLoad = canHaveLightingLoad && Random().nextInt(20) == 0;
+
+    _sprite = Container(
+      child: CustomPaint(
+        painter: _BuildingPainter(this),
+      ),
+    );
   }
 
+  Widget _sprite;
   @override
-  Widget get sprite => Container(
-        child: CustomPaint(
-          painter: _BuildingPainter(this),
-        ),
-      );
+  Widget get sprite => _sprite;
 }
 
 class _BuildingPainter extends CustomPainter {

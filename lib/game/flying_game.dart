@@ -16,7 +16,7 @@ import 'package:flying_hj/game/slopes/star_load.dart';
 import 'item.dart';
 
 class FlyingGame extends ChangeNotifier {
-  static const int fps = 50;
+  static const int maxFps = 100;
 
   static const double gravity = -13;
   static const double flyPower = 13;
@@ -29,7 +29,7 @@ class FlyingGame extends ChangeNotifier {
 
   bool isFlying = false;
 
-  double timeDelta = 1 / fps;
+  double timeDelta = 1 / maxFps;
 
   Flyer flyer = Hyeonjung();
 
@@ -106,10 +106,10 @@ class FlyingGame extends ChangeNotifier {
       addNextPathByRandom();
     }
 
-    timeDelta = 1 / fps;
+    timeDelta = 1 / maxFps;
     lastTimeStamp = null;
     _frameGenerator =
-        Timer.periodic(const Duration(microseconds: 1000000 ~/ fps), (_) {
+        Timer.periodic(const Duration(microseconds: 1000000 ~/ maxFps), (_) {
       try {
         update();
       } catch (e) {
@@ -135,7 +135,7 @@ class FlyingGame extends ChangeNotifier {
       timeDelta = (currentTimeStamp - lastTimeStamp) / 1000;
 
       if (timeDelta > 1) {
-        timeDelta = 1 / fps;
+        timeDelta = 1 / maxFps;
         lastTimeStamp = null;
         return;
       }

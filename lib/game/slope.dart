@@ -46,7 +46,7 @@ class SlopePainter extends CustomPainter {
     slopePath.lineTo(slope.width + 0.01, 0);
     slopePath.close();
 
-    canvas.drawPath(slopePath, Paint()..color = Colors.white);
+    canvas.drawPath(slopePath, Paint()..color = Colors.blueGrey);
   }
 
   @override

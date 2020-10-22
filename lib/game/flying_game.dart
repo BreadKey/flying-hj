@@ -97,7 +97,7 @@ class FlyingGame extends ChangeNotifier {
 
     accTime = 0;
 
-    moon.setPoint(Offset(gameHeight * 1.618, gameHeight - moon.height / 2));
+    moon.setPoint(Offset(0, 0));
 
     addNextPath(firstFallTime, Offset(0, gravity));
 
@@ -162,7 +162,7 @@ class FlyingGame extends ChangeNotifier {
       flyer.velocityX = min(maxVelocityX, flyer.velocityX);
       _pathHeight = max(minPathHeight, _pathHeight);
 
-      moon.setPoint(Offset(moon.x - 0.1, moon.y));
+      moon.setPoint(Offset(moon.x - 0.05, moon.y));
 
       accTime -= 5;
     }

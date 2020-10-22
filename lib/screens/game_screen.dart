@@ -48,7 +48,7 @@ class _GameScreenState extends State<GameScreen> {
                 children: [
                   Align(
                       key: ValueKey("moon"),
-                      alignment: Alignment.bottomLeft,
+                      alignment: Alignment.topRight,
                       child: ChangeNotifierProvider.value(
                         value: game.moon,
                         child: Consumer<Moon>(

@@ -40,11 +40,14 @@ class StraightBlock extends Item {
       flyer.accelerationY = 0;
     }
     flyer.velocityX = velocityX;
+    flyer.fly();
   }
 
   @override
   void end(Flyer flyer) {
     flyer.velocityX = _lastVelocityX;
-    flyer.endFly();
+    if (flyer.velocityY == 0) {
+      flyer.endFly();
+    }
   }
 }

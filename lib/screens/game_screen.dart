@@ -136,11 +136,16 @@ class _GameScreenState extends State<GameScreen> {
         extendBodyBehindAppBar: true,
         floatingActionButton: MaterialButton(
           minWidth: 160,
-          height: 80,
+          height: 100,
           child: Transform.rotate(
-            angle: -pi / 2,
-            child: const Icon(Icons.forward, color: Colors.white),
-          ),
+              angle: -pi / 6,
+              child: Image.asset(
+                "assets/hj/frame3.png",
+                color: Colors.white,
+                width: 60,
+                filterQuality: FilterQuality.none,
+                fit: BoxFit.contain,
+              )),
           color: Colors.black26,
           onPressed: () {},
           onHighlightChanged: (value) {

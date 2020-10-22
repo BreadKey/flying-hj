@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flying_hj/colors.dart';
 import 'package:flying_hj/game/flyer.dart';
 import 'package:flying_hj/game/item.dart';
 
@@ -14,14 +15,14 @@ class StraightBlock extends Item {
 
   @override
   Widget get sprite => Material(
-        color: Colors.amber,
+        color: colorSunOrange,
         elevation: 4,
         borderRadius: BorderRadius.circular(4),
-        child: const Icon(
+        child: Center(child: const Icon(
           Icons.forward,
           color: Colors.white,
           size: 48,
-        ),
+        ),)
       );
 
   @override

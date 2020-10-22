@@ -41,79 +41,75 @@ class _GameScreenState extends State<GameScreen> {
   Widget build(BuildContext context) => Scaffold(
         body: Container(
           color: colorGalaxyBlue,
-          child: SizedBox(
-              width: 10000,
-              height: FlyingGame.gameHeight * gameRatio,
+          child: SizedBox.expand(
               child: Stack(
-                children: [
-                  Align(
-                      key: ValueKey("moon"),
-                      alignment: Alignment.topRight,
-                      child: ChangeNotifierProvider.value(
-                        value: game.moon,
-                        child: Consumer<Moon>(
-                          builder: (context, moon, _) => GameObjectRenderer(
-                              key: ValueKey(moon),
-                              gameObject: moon,
-                              gameRatio: gameRatio),
-                        ),
-                      )),
-                  Align(
-                    key: ValueKey("game"),
-                    alignment: Alignment.bottomLeft,
-                    child: MultiProvider(
-                      providers: [
-                        ChangeNotifierProvider<FlyingGame>.value(value: game),
-                        ChangeNotifierProvider<Field>.value(value: game.field)
-                      ],
-                      child: Consumer<FlyingGame>(
-                          builder: (context, game, child) =>
-                              Transform.translate(
-                                offset: Offset(
-                                    (-game.flyer.x +
-                                            game.flyer.spriteWidth / 2) *
-                                        gameRatio,
-                                    0),
-                                child: child,
-                              ),
-                          child: Stack(
-                            alignment: Alignment.bottomLeft,
-                            children: [
-                              Consumer<Field>(
-                                key: ValueKey("field"),
-                                builder: (_, field, __) => Stack(
-                                  alignment: Alignment.bottomLeft,
-                                  children: field.walls
-                                      .expand((e) => e)
-                                      .map((wall) => GameObjectRenderer(
-                                            gameObject: wall,
-                                            gameRatio: gameRatio,
-                                            key: ValueKey(wall),
-                                          ))
-                                      .toList()
-                                        ..addAll(field.items
-                                            .map((item) => GameObjectRenderer(
-                                                  gameObject: item,
-                                                  gameRatio: gameRatio,
-                                                  key: ValueKey(item),
-                                                ))
-                                            .toList()),
-                                ),
-                              ),
-                              Consumer<FlyingGame>(
-                                key: ValueKey("flyer"),
-                                builder: (context, _, __) => GameObjectRenderer(
-                                  gameObject: game.flyer,
-                                  gameRatio: gameRatio,
-                                  key: ValueKey(game.flyer),
-                                ),
-                              ),
-                            ],
-                          )),
+            children: [
+              Align(
+                  key: ValueKey("moon"),
+                  alignment: Alignment.topRight,
+                  child: ChangeNotifierProvider.value(
+                    value: game.moon,
+                    child: Consumer<Moon>(
+                      builder: (context, moon, _) => GameObjectRenderer(
+                          key: ValueKey(moon),
+                          gameObject: moon,
+                          gameRatio: gameRatio),
                     ),
-                  )
-                ],
-              )),
+                  )),
+              Align(
+                key: ValueKey("game"),
+                alignment: Alignment.bottomLeft,
+                child: MultiProvider(
+                  providers: [
+                    ChangeNotifierProvider<FlyingGame>.value(value: game),
+                    ChangeNotifierProvider<Field>.value(value: game.field)
+                  ],
+                  child: Consumer<FlyingGame>(
+                      builder: (context, game, child) => Transform.translate(
+                            offset: Offset(
+                                (-game.flyer.x + game.flyer.spriteWidth / 2) *
+                                    gameRatio,
+                                0),
+                            child: child,
+                          ),
+                      child: Stack(
+                        alignment: Alignment.bottomLeft,
+                        children: [
+                          Consumer<Field>(
+                            key: ValueKey("field"),
+                            builder: (_, field, __) => Stack(
+                              alignment: Alignment.bottomLeft,
+                              children: field.walls
+                                  .expand((e) => e)
+                                  .map((wall) => GameObjectRenderer(
+                                        gameObject: wall,
+                                        gameRatio: gameRatio,
+                                        key: ValueKey(wall),
+                                      ))
+                                  .toList()
+                                    ..addAll(field.items
+                                        .map((item) => GameObjectRenderer(
+                                              gameObject: item,
+                                              gameRatio: gameRatio,
+                                              key: ValueKey(item),
+                                            ))
+                                        .toList()),
+                            ),
+                          ),
+                          Consumer<FlyingGame>(
+                            key: ValueKey("flyer"),
+                            builder: (context, _, __) => GameObjectRenderer(
+                              gameObject: game.flyer,
+                              gameRatio: gameRatio,
+                              key: ValueKey(game.flyer),
+                            ),
+                          ),
+                        ],
+                      )),
+                ),
+              )
+            ],
+          )),
         ),
         appBar: AppBar(
           backgroundColor: Colors.transparent,

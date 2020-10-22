@@ -1,15 +1,14 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flying_hj/game/flying_game.dart';
+import 'package:flying_hj/game/path_maker.dart';
 
 void main() {
-  FlyingGame game;
+  PathMaker pathMaker;
 
   setUp(() {
-    game = FlyingGame();
+    pathMaker = PathMaker();
   });
 
   tearDown(() {
-    game.dispose();
   });
 
   test("Parabola", () {
@@ -17,7 +16,7 @@ void main() {
     Offset velocity = Offset(2, 2);
     Offset acceleration = Offset(0, -2);
 
-    List<Offset> parabola = game.generateParabola(
+    List<Offset> parabola = pathMaker.generateParabola(
         Offset(0, 0), velocity, acceleration, moveDistnace,
         unitX: moveDistnace / 5);
 
@@ -28,7 +27,7 @@ void main() {
     acceleration = Offset(0, 2.5);
     moveDistnace = 2;
 
-    parabola = game.generateParabola(
+    parabola = pathMaker.generateParabola(
         parabola.last, velocity, acceleration, moveDistnace,
         unitX: moveDistnace / 5);
 
@@ -38,7 +37,7 @@ void main() {
     acceleration = Offset(0, -2);
     moveDistnace = 3;
 
-    parabola = game.generateParabola(
+    parabola = pathMaker.generateParabola(
         parabola.last, velocity, acceleration, moveDistnace,
         unitX: moveDistnace / 5);
 

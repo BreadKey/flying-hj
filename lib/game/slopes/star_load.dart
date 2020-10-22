@@ -46,7 +46,7 @@ class _StarLoadPainter extends CustomPainter {
           ..moveTo(0, 0)
           ..lineTo(starLoad.starSize, 0)
           ..moveTo(starLoad.starSize / 2, -starLoad.starSize / 2)
-          ..lineTo(starLoad.starSize / 2, starLoad.starSize / 2) {}
+          ..lineTo(starLoad.starSize / 2, starLoad.starSize / 2);
 
   @override
   void paint(Canvas canvas, Size size) {

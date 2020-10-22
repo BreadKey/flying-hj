@@ -9,6 +9,7 @@ import 'package:flying_hj/game/flyers/hyeonjung.dart';
 import 'package:flying_hj/game/game_object.dart';
 import 'package:flying_hj/game/items/straight_block.dart';
 import 'package:flying_hj/game/moon.dart';
+import 'package:flying_hj/game/path_maker.dart';
 import 'package:flying_hj/game/slopes/bridge.dart';
 import 'package:flying_hj/game/slopes/building.dart';
 import 'package:flying_hj/game/slopes/star_load.dart';
@@ -22,16 +23,14 @@ class FlyingGame extends ChangeNotifier {
   static const double flyPower = 13;
   static const double gameHeight = 15;
   static const double defaultVelocityX = 12;
-  static const double defaultPathHieght = 7.5;
   static const double maxVelocityX = 40;
-  static const double minPathHeight = 5.5;
-  static const double sameBuildingError = 0.5;
 
   bool isFlying = false;
 
   double timeDelta = 1 / maxFps;
 
   Flyer flyer = Hyeonjung();
+  final PathMaker _pathMaker = PathMaker();
 
   Timer _frameGenerator;
 
@@ -44,14 +43,6 @@ class FlyingGame extends ChangeNotifier {
   final _itemQueue = Queue<Item>();
   final _activatedItems = List<Item>();
 
-  Offset _pathStartVelocity;
-  Offset _pathStartPoint;
-
-  double _previousTopSlopeHeight;
-  double _previousBuildingHeight;
-
-  double _pathHeight;
-
   double _levelVelocityX;
 
   double _lastAirTime;
@@ -63,24 +54,20 @@ class FlyingGame extends ChangeNotifier {
 
   void startGame() {
     isGameOver = false;
-
-    _previousBuildingHeight = null;
-    _previousTopSlopeHeight = null;
-
-    _pathHeight = defaultPathHieght;
+    _pathMaker.reset();
 
     final firstFallTime = 0.5;
 
-    _pathStartPoint = Offset(
+    _levelVelocityX = defaultVelocityX;
+
+    _pathMaker.startPoint = Offset(
         0, gameHeight / 2 + (-gravity * firstFallTime * firstFallTime) / 2);
+    _pathMaker.startVelocity = Offset(_levelVelocityX, 0);
 
-    flyer.setPoint(_pathStartPoint);
+    flyer.setPoint(_pathMaker.startPoint);
     flyer.angle = 0;
-    flyer.velocityX = defaultVelocityX;
-    _levelVelocityX = flyer.velocityX;
+    flyer.velocityX = _levelVelocityX;
     flyer.velocityY = 0;
-
-    _pathStartVelocity = Offset(flyer.velocityX, 0);
 
     isFlying = false;
 
@@ -99,7 +86,7 @@ class FlyingGame extends ChangeNotifier {
 
     moon.setPoint(Offset(0, 0));
 
-    addNextPath(firstFallTime, Offset(0, gravity));
+    addParabolaPath(firstFallTime, Offset(0, gravity));
 
     addStraightPath(time: 3);
     for (int i = 0; i < 10; i++) {
@@ -151,18 +138,7 @@ class FlyingGame extends ChangeNotifier {
     flyer.accelerationY = accelerationY;
 
     if (accTime > 5) {
-      if (flyer.velocityX < _levelVelocityX) {
-        flyer.velocityX = _levelVelocityX;
-      }
-
-      _levelVelocityX += 1;
-      flyer.velocityX += 1;
-      _pathHeight -= 0.05;
-
-      flyer.velocityX = min(maxVelocityX, flyer.velocityX);
-      _pathHeight = max(minPathHeight, _pathHeight);
-
-      moon.setPoint(Offset(moon.x - 0.05, moon.y));
+      _levelUp();
 
       accTime -= 5;
     }
@@ -179,26 +155,42 @@ class FlyingGame extends ChangeNotifier {
     lastTimeStamp = currentTimeStamp;
   }
 
-  int addNextPathByRandom() {
+  void _levelUp() {
+    if (flyer.velocityX < _levelVelocityX) {
+      flyer.velocityX = _levelVelocityX;
+    }
+
+    _levelVelocityX += 1;
+    flyer.velocityX += 1;
+    _pathMaker.pathHeight -= 0.05;
+
+    flyer.velocityX = min(maxVelocityX, flyer.velocityX);
+
+    moon.setPoint(Offset(moon.x - 0.05, moon.y));
+  }
+
+  void addNextPathByRandom() {
     final airTime = 1 / (Random().nextInt(4) + 1);
 
-    if (_pathStartPoint.dy > gameHeight - _pathHeight / 2) {
-      _pathStartVelocity = Offset(_levelVelocityX, 0);
-      return addNextPath(airTime, Offset(0, gravity / airTime));
-    } else if (_pathStartPoint.dy < _pathHeight / 2) {
-      _pathStartVelocity = Offset(_levelVelocityX, 0);
-      return addNextPath(airTime, Offset(0, flyPower / airTime));
-    } else if (_pathStartVelocity.dy < 5 && _pathStartVelocity.dy > -5) {
-      return addNextPath(airTime,
+    final startPoint = _pathMaker.startPoint;
+
+    if (startPoint.dy > gameHeight - _pathMaker.pathHeight / 2) {
+      _pathMaker.startVelocity = Offset(_levelVelocityX, 0);
+      return addParabolaPath(airTime, Offset(0, gravity / airTime));
+    } else if (startPoint.dy < _pathMaker.pathHeight / 2) {
+      _pathMaker.startVelocity = Offset(_levelVelocityX, 0);
+      return addParabolaPath(airTime, Offset(0, flyPower / airTime));
+    } else if (_pathMaker.startVelocity.dy.abs() < 5) {
+      return addParabolaPath(airTime,
           Offset(0, (Random().nextInt(2) == 0 ? flyPower : gravity) / airTime));
     }
 
     if (Random().nextInt(16) == 0) {
-      return addStraightPath(time: airTime * 3, smootherTime: _lastAirTime / 3);
+      return addStraightPath(time: airTime * 3, smoother: true);
     }
 
     final accelerationY =
-        2 * (-_pathStartVelocity.dy * airTime) / airTime / airTime;
+        2 * (-_pathMaker.startVelocity.dy * airTime) / airTime / airTime;
 
     final offsetY = ((_levelVelocityX / maxVelocityX / _lastAirTime) *
         maxVelocityX *
@@ -207,71 +199,39 @@ class FlyingGame extends ChangeNotifier {
 
     _lastAirTime = airTime;
 
-    return addNextPath(airTime, Offset(0, accelerationY),
+    return addParabolaPath(airTime, Offset(0, accelerationY),
         offset: Offset(
-            0, (_pathHeight / 2) / (offsetY) * (Random().nextInt(5) - 2)));
+            0,
+            (_pathMaker.pathHeight / 2) /
+                (offsetY) *
+                (Random().nextInt(5) - 2)));
   }
 
-  int addNextPath(double airTime, Offset acceleration,
+  void addParabolaPath(double airTime, Offset acceleration,
       {Offset offset: Offset.zero}) {
-    final parabola = generateParabola(_pathStartPoint, _pathStartVelocity,
-        acceleration, airTime * _levelVelocityX,
-        offset: offset);
-    _pathStartPoint = parabola.last;
-    _pathStartVelocity += acceleration * airTime;
-
-    final walls = generateWall(
-        parabola..removeLast(), parabola.map((_) => _pathHeight / 2).toList());
+    final walls =
+        _pathMaker.generateParabolaPath(airTime, acceleration, _levelVelocityX);
     return addWalls(walls);
   }
 
-  int addStraightPath({double time: 2, double smootherTime: 0}) {
-    final int smootherPathLength = smootherTime == 0
-        ? 0
-        : addNextPath(0.5, Offset(0, -_pathStartVelocity.dy * 2));
+  void addStraightPath({double time: 2, bool smoother: false}) {
+    if (smoother) {
+      addParabolaPath(0.5, Offset(0, -_pathMaker.startVelocity.dy * 2));
+    }
 
     addItem(StraightBlock(
         time / 2, time / 2, _levelVelocityX * time - flyer.width * 2)
-      ..setPoint(_pathStartPoint));
-    final goalPoint = _pathStartPoint + Offset(_levelVelocityX * time, 0);
+      ..setPoint(_pathMaker.startPoint));
 
-    final minHeight = _pathHeight + flyer.height * 2;
+    final walls = _pathMaker.generateStraightPath(
+        time, _pathMaker.pathHeight + flyer.height * 2, _levelVelocityX);
 
-    final startVelocityY = minHeight / time;
-
-    final wallParabola = generateParabola(
-      _pathStartPoint,
-      Offset(_levelVelocityX, startVelocityY),
-      Offset(0, -2 * startVelocityY / time),
-      time * _levelVelocityX,
-    )..removeLast();
-
-    final deltaX = (goalPoint.dx - _pathStartPoint.dx) / (wallParabola.length);
-
-    final path = List.generate(wallParabola.length,
-        (index) => _pathStartPoint + Offset(deltaX * index, 0));
-
-    final halfPathHeight = max(_pathHeight / 2.5, _pathHeight / (6 / time));
-
-    final walls = generateWall(
-      path,
-      wallParabola
-          .map((point) => _pathStartPoint.dy - point.dy + halfPathHeight)
-          .toList()
-            ..add(halfPathHeight),
-    );
-
-    _pathStartPoint = goalPoint;
-    _pathStartVelocity = Offset(_levelVelocityX, 0);
-
-    return addWalls(walls) + smootherPathLength;
+    return addWalls(walls);
   }
 
-  int addWalls(Iterable<Iterable<GameObject>> walls) {
+  void addWalls(Iterable<Iterable<GameObject>> walls) {
     field.addWalls(walls);
     _wallQueue.addAll(walls);
-
-    return walls.length;
   }
 
   bool isCollided(GameObject a, GameObject b) {
@@ -309,7 +269,8 @@ class FlyingGame extends ChangeNotifier {
   }
 
   void _checkGameOver() {
-    if (flyer.top > (gameHeight + _pathHeight) || flyer.bottom < -_pathHeight) {
+    if (flyer.top > (gameHeight + _pathMaker.pathHeight) ||
+        flyer.bottom < -_pathMaker.pathHeight) {
       gameOver();
     }
 
@@ -377,128 +338,6 @@ class FlyingGame extends ChangeNotifier {
     item.active(flyer);
     _activatedItems.add(item);
     removeItem(item);
-  }
-
-  List<Offset> generateParabola(
-      Offset start, Offset startVelocity, Offset acceleration, double distance,
-      {double unitX: 1.5, Offset offset: Offset.zero}) {
-    final interval = distance ~/ unitX;
-    final time = distance / startVelocity.dx;
-    final delta = time / interval;
-
-    final parabola = <Offset>[start];
-
-    Offset currentPoint = start;
-    Offset currentVelocity = startVelocity;
-
-    for (int i = 0; i < interval; i++) {
-      currentVelocity += acceleration * delta;
-      currentPoint += currentVelocity * delta + offset;
-      parabola.add(currentPoint);
-    }
-
-    return parabola;
-  }
-
-  Iterable<List<GameObject>> generateWall(
-      List<Offset> path, List<double> pathHeights,
-      {int bridgeDice = 5}) {
-    assert(path.length >= 2);
-
-    final width = path[1].dx - path[0].dx;
-
-    bool isBridge;
-    bool previousWasBridge = false;
-    double bridgeStartY;
-
-    final walls = <List<GameObject>>[];
-
-    for (int index = 0; index < path.length; index++) {
-      final point = path[index];
-
-      final buildingHeight =
-          calculateBuildingHeight(point.dy, pathHeights[index]);
-
-      final topSlopeHeight =
-          max(0.0, gameHeight - (point.dy + pathHeights[index]));
-
-      if (previousWasBridge) {
-        previousWasBridge = false;
-      }
-
-      if (buildingHeight == _previousBuildingHeight) {
-        if (isBridge == null) {
-          isBridge = canBeBridge(
-                  walls,
-                  List.generate(path.length,
-                      (index) => path[index].dy - pathHeights[index]),
-                  index) &&
-              Random().nextInt(bridgeDice) == 0;
-          if (isBridge) {
-            bridgeStartY = point.dy - pathHeights[index];
-          } else {
-            isBridge = null;
-          }
-        } else if (isBridge) {
-          if (index == path.length - 1) {
-            isBridge = false;
-            previousWasBridge = true;
-          } else if (index < path.length - 2) {
-            if (path[index + 1].dy -
-                    pathHeights[index + 1] +
-                    sameBuildingError <
-                bridgeStartY) isBridge = false;
-            previousWasBridge = true;
-          }
-        }
-      } else {
-        if (isBridge == true) {
-          isBridge = null;
-          previousWasBridge = true;
-        }
-      }
-
-      final generatedWalls = [
-        StarLoad(
-          width,
-          topSlopeHeight,
-          previousSlopeHeight: _previousTopSlopeHeight,
-          centerX: point.dx,
-        ),
-        isBridge == true
-            ? Bridge(width, buildingHeight, centerX: point.dx)
-            : Building(width, buildingHeight,
-                previousBuildingHeight: _previousBuildingHeight,
-                canHaveLightingLoad: !previousWasBridge,
-                centerX: point.dx),
-      ];
-
-      _previousBuildingHeight = buildingHeight;
-      _previousTopSlopeHeight = topSlopeHeight;
-
-      walls.add(generatedWalls);
-    }
-
-    return walls;
-  }
-
-  bool canBeBridge(Iterable<List<GameObject>> walls,
-          List<double> buildingHeights, index) =>
-      index < buildingHeights.length - 2 &&
-      buildingHeights[index + 1] > buildingHeights[index] &&
-      walls.isNotEmpty &&
-      !(walls.last.last as Building).hasLightingLoad;
-
-  double calculateBuildingHeight(double y, double pathHeight) {
-    final buildingHeight = max(0.0, y - pathHeight);
-
-    if (buildingHeight != 0 &&
-        _previousBuildingHeight != null &&
-        (buildingHeight - _previousBuildingHeight).abs() < sameBuildingError) {
-      return _previousBuildingHeight;
-    }
-
-    return buildingHeight;
   }
 
   void addItem(Item item) {

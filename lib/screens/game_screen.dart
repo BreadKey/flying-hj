@@ -59,6 +59,7 @@ class _GameScreenState extends State<GameScreen> {
                                     gameObject: moon,
                                     gameRatio: gameRatio)),
                             Transform.translate(
+                              key: ValueKey("background"),
                               offset: Offset(moon.x * 2 * gameRatio, 0),
                               child: BackgroundPainter(),
                             )

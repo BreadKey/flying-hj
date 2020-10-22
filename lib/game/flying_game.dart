@@ -10,9 +10,6 @@ import 'package:flying_hj/game/game_object.dart';
 import 'package:flying_hj/game/items/straight_block.dart';
 import 'package:flying_hj/game/moon.dart';
 import 'package:flying_hj/game/path_maker.dart';
-import 'package:flying_hj/game/slopes/bridge.dart';
-import 'package:flying_hj/game/slopes/building.dart';
-import 'package:flying_hj/game/slopes/star_load.dart';
 
 import 'item.dart';
 

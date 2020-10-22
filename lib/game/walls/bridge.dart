@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flying_hj/colors.dart';
-import 'package:flying_hj/game/slope.dart';
+import 'package:flying_hj/game/wall.dart';
 
-class Bridge extends Slope {
+class Bridge extends Wall {
   Bridge(double width, double height, {double centerX})
       : super(width, height, centerX: centerX, fromTop: false);
 

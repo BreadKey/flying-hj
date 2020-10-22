@@ -3,9 +3,9 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flying_hj/game/flying_game.dart';
 import 'package:flying_hj/game/game_object.dart';
-import 'package:flying_hj/game/slopes/bridge.dart';
-import 'package:flying_hj/game/slopes/building.dart';
-import 'package:flying_hj/game/slopes/star_load.dart';
+import 'package:flying_hj/game/walls/bridge.dart';
+import 'package:flying_hj/game/walls/building.dart';
+import 'package:flying_hj/game/walls/star_load.dart';
 
 class PathMaker {
   static const double defaultPathHieght = 7.5;

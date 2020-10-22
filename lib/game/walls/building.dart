@@ -3,11 +3,11 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flying_hj/colors.dart';
-import 'package:flying_hj/game/slope.dart';
+import 'package:flying_hj/game/wall.dart';
 
 const double lightingLoadHeight = 1;
 
-class Building extends Slope {
+class Building extends Wall {
   final List<bool> lights = [];
   bool hasGuideLight;
   bool hasLightingLoad;

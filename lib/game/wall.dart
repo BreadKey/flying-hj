@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flying_hj/game/flying_game.dart';
 import 'package:flying_hj/game/game_object.dart';
 
-class Slope extends GameObject {
+class Wall extends GameObject {
   final double previousSlopeHeight;
   final bool fromTop;
 
-  Slope(double width, double height,
+  Wall(double width, double height,
       {this.previousSlopeHeight, this.fromTop = true, double centerX})
       : super(width, height, width, height) {
     x = centerX + width / 2;
@@ -15,14 +15,14 @@ class Slope extends GameObject {
 
   @override
   Widget get sprite => CustomPaint(
-        painter: SlopePainter(this),
+        painter: DefaultWallPainter(this),
       );
 }
 
-class SlopePainter extends CustomPainter {
-  final Slope slope;
+class DefaultWallPainter extends CustomPainter {
+  final Wall slope;
 
-  SlopePainter(this.slope);
+  DefaultWallPainter(this.slope);
 
   @override
   void paint(Canvas canvas, Size size) {

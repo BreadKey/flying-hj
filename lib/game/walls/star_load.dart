@@ -2,9 +2,9 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flying_hj/colors.dart';
-import 'package:flying_hj/game/slope.dart';
+import 'package:flying_hj/game/wall.dart';
 
-class StarLoad extends Slope {
+class StarLoad extends Wall {
   double starSize;
   bool hasLight;
   final List<Offset> load = [Offset.zero];

@@ -8,6 +8,8 @@ import 'package:flying_hj/game/moon.dart';
 import 'package:flying_hj/screens/game_object_renderer.dart';
 import 'package:provider/provider.dart';
 
+import 'background_painter.dart';
+
 class GameScreen extends StatefulWidget {
   @override
   State<StatefulWidget> createState() => _GameScreenState();
@@ -44,18 +46,25 @@ class _GameScreenState extends State<GameScreen> {
           child: SizedBox.expand(
               child: Stack(
             children: [
-              Align(
-                  key: ValueKey("moon"),
-                  alignment: Alignment.topRight,
-                  child: ChangeNotifierProvider.value(
-                    value: game.moon,
-                    child: Consumer<Moon>(
-                      builder: (context, moon, _) => GameObjectRenderer(
-                          key: ValueKey(moon),
-                          gameObject: moon,
-                          gameRatio: gameRatio),
-                    ),
-                  )),
+              ChangeNotifierProvider.value(
+                value: game.moon,
+                child: Consumer<Moon>(
+                    builder: (context, moon, _) => Stack(
+                          children: [
+                            Align(
+                                key: ValueKey("moon"),
+                                alignment: Alignment.topRight,
+                                child: GameObjectRenderer(
+                                    key: ValueKey(moon),
+                                    gameObject: moon,
+                                    gameRatio: gameRatio)),
+                            Transform.translate(
+                              offset: Offset(moon.x * 2 * gameRatio, 0),
+                              child: BackgroundPainter(),
+                            )
+                          ],
+                        )),
+              ),
               Align(
                 key: ValueKey("game"),
                 alignment: Alignment.bottomLeft,

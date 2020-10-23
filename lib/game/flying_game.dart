@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flying_hj/game/field.dart';
 import 'package:flying_hj/game/flyer.dart';
 import 'package:flying_hj/game/flyers/hyeonjung.dart';
-import 'package:flying_hj/game/game_object.dart';
+import 'package:flying_hj/game/foundation/game_object.dart';
 import 'package:flying_hj/game/items/straight_block.dart';
 import 'package:flying_hj/game/moon.dart';
 import 'package:flying_hj/game/path_maker.dart';

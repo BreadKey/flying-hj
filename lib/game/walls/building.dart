@@ -18,7 +18,7 @@ class Building extends Wall {
       double centerX,
       bool canHaveLightingLoad})
       : super(width, height,
-            previousSlopeHeight: previousBuildingHeight,
+            previousWallHeight: previousBuildingHeight,
             fromTop: fromTop,
             centerX: centerX) {
     hasGuideLight = previousBuildingHeight != 0 && Random().nextInt(10) == 0;
@@ -89,8 +89,8 @@ class _BuildingPainter extends CustomPainter {
       _paint.strokeCap = StrokeCap.round;
       _paint.strokeWidth = windowStrokeWidth / 2;
       _paint.color = colorFlameScarlet;
-      if (building.previousSlopeHeight != null &&
-          building.previousSlopeHeight > building.height) {
+      if (building.previousWallHeight != null &&
+          building.previousWallHeight > building.height) {
         canvas.drawPoints(PointMode.points,
             [Offset(building.width - 0.1, buildingRect.top)], _paint);
       } else {

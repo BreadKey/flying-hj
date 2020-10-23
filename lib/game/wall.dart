@@ -3,11 +3,11 @@ import 'package:flying_hj/game/flying_game.dart';
 import 'package:flying_hj/game/game_object.dart';
 
 class Wall extends GameObject {
-  final double previousSlopeHeight;
+  final double previousWallHeight;
   final bool fromTop;
 
   Wall(double width, double height,
-      {this.previousSlopeHeight, this.fromTop = true, double centerX})
+      {this.previousWallHeight, this.fromTop = true, double centerX})
       : super(width, height, width, height) {
     x = centerX + width / 2;
     y = fromTop ? FlyingGame.gameHeight - height / 2 : height / 2;
@@ -20,33 +20,33 @@ class Wall extends GameObject {
 }
 
 class DefaultWallPainter extends CustomPainter {
-  final Wall slope;
+  final Wall wall;
 
-  DefaultWallPainter(this.slope);
+  DefaultWallPainter(this.wall);
 
   @override
   void paint(Canvas canvas, Size size) {
-    final ratio = size.width / slope.width;
+    final ratio = size.width / wall.width;
 
     canvas.scale(ratio);
 
-    final slopePath = Path();
+    final wallPath = Path();
 
-    slopePath.moveTo(
+    wallPath.moveTo(
         0,
-        !slope.fromTop
-            ? slope.height - (slope.previousSlopeHeight ?? slope.height)
+        !wall.fromTop
+            ? wall.height - (wall.previousWallHeight ?? wall.height)
             : 0);
-    slopePath.lineTo(
+    wallPath.lineTo(
         0,
-        slope.fromTop
-            ? slope.previousSlopeHeight ?? slope.height
-            : slope.height);
-    slopePath.lineTo(slope.width + 0.01, slope.height);
-    slopePath.lineTo(slope.width + 0.01, 0);
-    slopePath.close();
+        wall.fromTop
+            ? wall.previousWallHeight ?? wall.height
+            : wall.height);
+    wallPath.lineTo(wall.width + 0.01, wall.height);
+    wallPath.lineTo(wall.width + 0.01, 0);
+    wallPath.close();
 
-    canvas.drawPath(slopePath, Paint()..color = Colors.blueGrey);
+    canvas.drawPath(wallPath, Paint()..color = Colors.blueGrey);
   }
 
   @override

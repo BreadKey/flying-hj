@@ -21,12 +21,12 @@ class PathMaker {
     _pathHeight = max(minPathHeight, value);
   }
 
-  double _previousTopSlopeHeight;
-  double _previousBuildingHeight;
+  double _previousTopWallHeight;
+  double _previousBottomWallHeight;
 
   void reset() {
-    _previousTopSlopeHeight = null;
-    _previousBuildingHeight = null;
+    _previousTopWallHeight = null;
+    _previousBottomWallHeight = null;
     pathHeight = defaultPathHieght;
   }
 
@@ -116,14 +116,14 @@ class PathMaker {
       final buildingHeight =
           calculateBuildingHeight(point.dy, pathHeights[index]);
 
-      final topSlopeHeight =
+      final topWallHeight =
           max(0.0, FlyingGame.gameHeight - (point.dy + pathHeights[index]));
 
       if (previousWasBridge) {
         previousWasBridge = false;
       }
 
-      if (buildingHeight == _previousBuildingHeight) {
+      if (buildingHeight == _previousBottomWallHeight) {
         if (isBridge == null) {
           isBridge = canBeBridge(
                   walls,
@@ -158,20 +158,20 @@ class PathMaker {
       final generatedWalls = [
         StarLoad(
           width,
-          topSlopeHeight,
-          previousSlopeHeight: _previousTopSlopeHeight,
+          topWallHeight,
+          previousWallHeight: _previousTopWallHeight,
           centerX: point.dx,
         ),
         isBridge == true
             ? Bridge(width, buildingHeight, centerX: point.dx)
             : Building(width, buildingHeight,
-                previousBuildingHeight: _previousBuildingHeight,
+                previousBuildingHeight: _previousBottomWallHeight,
                 canHaveLightingLoad: !previousWasBridge,
                 centerX: point.dx),
       ];
 
-      _previousBuildingHeight = buildingHeight;
-      _previousTopSlopeHeight = topSlopeHeight;
+      _previousBottomWallHeight = buildingHeight;
+      _previousTopWallHeight = topWallHeight;
 
       walls.add(generatedWalls);
     }
@@ -183,9 +183,9 @@ class PathMaker {
     final buildingHeight = max(0.0, y - pathHeight);
 
     if (buildingHeight != 0 &&
-        _previousBuildingHeight != null &&
-        (buildingHeight - _previousBuildingHeight).abs() < sameBuildingError) {
-      return _previousBuildingHeight;
+        _previousBottomWallHeight != null &&
+        (buildingHeight - _previousBottomWallHeight).abs() < sameBuildingError) {
+      return _previousBottomWallHeight;
     }
 
     return buildingHeight;

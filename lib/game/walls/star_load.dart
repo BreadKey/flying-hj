@@ -9,9 +9,9 @@ class StarLoad extends Wall {
   bool hasLight;
   final List<Offset> load = [Offset.zero];
   StarLoad(double width, double height,
-      {double previousSlopeHeight, double centerX})
+      {double previousWallHeight, double centerX})
       : super(width, height,
-            previousSlopeHeight: previousSlopeHeight,
+            previousWallHeight: previousWallHeight,
             centerX: centerX,
             fromTop: true) {
     starSize = 0.6 / (Random().nextInt(6) + 1);

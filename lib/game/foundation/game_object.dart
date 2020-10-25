@@ -5,6 +5,7 @@ abstract class GameObject {
   final double spriteHeight;
   final double width;
   final double height;
+  bool canCollide = true;
 
   GameObject(this.spriteWidth, this.spriteHeight, this.width, this.height);
 

@@ -6,11 +6,19 @@ class BackgroundPainter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox.expand(
-      child: CustomPaint(
-        painter: _BackgroundPainter(),
-      ),
-    );
+    return OverflowBox(
+        alignment: Alignment.bottomLeft,
+        minHeight: MediaQuery.of(context).size.height * 0.618,
+        maxWidth: MediaQuery.of(context).size.height * 6.18,
+        child: Opacity(
+          opacity: 0.618,
+          child: Image.asset(
+            "assets/background.png",
+            fit: BoxFit.fitHeight,
+            filterQuality: FilterQuality.none,
+            alignment: Alignment.bottomLeft,
+          ),
+        ));
   }
 }
 

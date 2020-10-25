@@ -40,23 +40,23 @@ class PathMaker {
     startPoint = parabola.last;
     startVelocity += acceleration * airTime;
 
-    return generateWall(
+    return generateWalls(
         parabola..removeLast(), parabola.map((_) => pathHeight / 2).toList());
   }
 
   Iterable<List<GameObject>> generateStraightPath(
-      double time, double minHeight, double velocityX) {
+      double airTime, double minHeight, double velocityX) {
     final startY = startPoint.dy;
 
-    final goalPoint = startPoint + Offset(velocityX * time, 0);
+    final goalPoint = startPoint + Offset(velocityX * airTime, 0);
 
-    final startVelocityY = minHeight / time;
+    final startVelocityY = minHeight / airTime;
 
     final wallParabola = generateParabola(
       startPoint,
       Offset(velocityX, startVelocityY),
-      Offset(0, -2 * startVelocityY / time),
-      time * velocityX,
+      Offset(0, -2 * startVelocityY / airTime),
+      airTime * velocityX,
     )..removeLast();
 
     final deltaX = (goalPoint.dx - startPoint.dx) / (wallParabola.length);
@@ -64,12 +64,12 @@ class PathMaker {
     final path = List.generate(
         wallParabola.length, (index) => startPoint + Offset(deltaX * index, 0));
 
-    final halfPathHeight = max(pathHeight / 2.5, pathHeight / (6 / time));
+    final halfPathHeight = max(pathHeight / 2.5, pathHeight / (6 / airTime));
 
     startPoint = goalPoint;
     startVelocity = Offset(velocityX, 0);
 
-    return generateWall(
+    return generateWalls(
       path,
       wallParabola.map((point) => startY - point.dy + halfPathHeight).toList()
         ..add(halfPathHeight),
@@ -97,7 +97,7 @@ class PathMaker {
     return parabola;
   }
 
-  Iterable<List<GameObject>> generateWall(
+  Iterable<List<GameObject>> generateWalls(
       List<Offset> path, List<double> pathHeights,
       {int bridgeDice = 5}) {
     assert(path.length >= 2);

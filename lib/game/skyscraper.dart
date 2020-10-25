@@ -1,15 +1,17 @@
+import 'package:flutter/foundation.dart';
 import 'package:flying_hj/game/foundation/game_object.dart';
 
-enum CrackPoint { top, center, bottom }
-
 abstract class Skyscraper extends GameObject {
-  final CrackPoint crackPoint;
+  final double crackPointY;
 
   Skyscraper(
       double spriteWidth, double spriteHeight, double width, double height,
-      {this.crackPoint = CrackPoint.center})
+      {@required this.crackPointY})
       : super(spriteWidth, spriteHeight, width, height);
 
-  void collapse();
+  void collapse() {
+    canCollide = false;
+  }
+
   void dispose();
 }

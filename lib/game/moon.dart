@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flying_hj/colors.dart';
-import 'package:flying_hj/game/game_object.dart';
+import 'package:flying_hj/game/foundation/game_object.dart';
 
 class Moon extends GameObject with ChangeNotifier {
   Moon() : super(5, 5, 5, 5);

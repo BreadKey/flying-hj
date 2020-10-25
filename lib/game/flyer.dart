@@ -1,4 +1,4 @@
-import 'package:flying_hj/game/game_object.dart';
+import 'package:flying_hj/game/foundation/game_object.dart';
 
 abstract class Flyer extends GameObject {
   double velocityX = 0;

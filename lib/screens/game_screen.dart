@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -8,13 +9,20 @@ import 'package:flying_hj/game/moon.dart';
 import 'package:flying_hj/screens/game_object_renderer.dart';
 import 'package:provider/provider.dart';
 
+import 'background_painter.dart';
+
 class GameScreen extends StatefulWidget {
   @override
   State<StatefulWidget> createState() => _GameScreenState();
 }
 
-class _GameScreenState extends State<GameScreen> {
+class _GameScreenState extends State<GameScreen>
+    with SingleTickerProviderStateMixin {
   FlyingGame game;
+  AnimationController _gameOverEffectController;
+  Animation _gameOverEffect;
+
+  StreamSubscription _gameOverSubscription;
 
   double gameRatio = 1;
 
@@ -23,6 +31,23 @@ class _GameScreenState extends State<GameScreen> {
     super.initState();
     game = FlyingGame();
     game.startGame();
+    _gameOverEffectController = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 100));
+    _gameOverEffect = Tween(begin: Offset(0, 0), end: Offset(0.01, 0)).animate(
+        CurvedAnimation(
+            parent: _gameOverEffectController, curve: Curves.bounceInOut));
+
+    _gameOverSubscription = game.gameOverStream.listen((gameOver) {
+      if (gameOver) {
+        _gameOverEffectController.forward();
+      }
+    });
+
+    _gameOverEffectController.addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        _gameOverEffectController.reverse();
+      }
+    });
   }
 
   @override
@@ -34,31 +59,35 @@ class _GameScreenState extends State<GameScreen> {
   @override
   void dispose() {
     game.dispose();
+    _gameOverEffectController.dispose();
+    _gameOverSubscription.cancel();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) => Scaffold(
         body: Container(
-          color: colorGalaxyBlue,
-          child: SizedBox(
-              width: 10000,
-              height: FlyingGame.gameHeight * gameRatio,
-              child: Stack(
-                children: [
-                  Align(
-                      key: ValueKey("moon"),
-                      alignment: Alignment.topRight,
-                      child: ChangeNotifierProvider.value(
-                        value: game.moon,
-                        child: Consumer<Moon>(
-                          builder: (context, moon, _) => GameObjectRenderer(
-                              key: ValueKey(moon),
-                              gameObject: moon,
-                              gameRatio: gameRatio),
-                        ),
-                      )),
-                  Align(
+            color: colorGalaxyBlue,
+            child: Stack(
+              children: [
+                ChangeNotifierProvider.value(
+                  value: game.moon,
+                  child: Consumer<Moon>(
+                      builder: (context, moon, _) => Stack(
+                            children: [
+                              Align(
+                                  key: ValueKey("moon"),
+                                  alignment: Alignment.topRight,
+                                  child: GameObjectRenderer(
+                                      key: ValueKey(moon),
+                                      gameObject: moon,
+                                      gameRatio: gameRatio)),
+                            ],
+                          )),
+                ),
+                SlideTransition(
+                  position: _gameOverEffect,
+                  child: Align(
                     key: ValueKey("game"),
                     alignment: Alignment.bottomLeft,
                     child: MultiProvider(
@@ -79,6 +108,15 @@ class _GameScreenState extends State<GameScreen> {
                           child: Stack(
                             alignment: Alignment.bottomLeft,
                             children: [
+                              Consumer<FlyingGame>(
+                                  key: ValueKey("background"),
+                                  builder: (_, game, __) => Transform.translate(
+                                        offset: Offset(
+                                            game.flyer.x * 0.995 * gameRatio -
+                                                game.flyer.width * gameRatio,
+                                            0),
+                                        child: BackgroundPainter(),
+                                      )),
                               Consumer<Field>(
                                 key: ValueKey("field"),
                                 builder: (_, field, __) => Stack(
@@ -111,10 +149,10 @@ class _GameScreenState extends State<GameScreen> {
                             ],
                           )),
                     ),
-                  )
-                ],
-              )),
-        ),
+                  ),
+                )
+              ],
+            )),
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,

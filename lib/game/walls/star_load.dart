@@ -2,16 +2,16 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flying_hj/colors.dart';
-import 'package:flying_hj/game/slope.dart';
+import 'package:flying_hj/game/wall.dart';
 
-class StarLoad extends Slope {
+class StarLoad extends Wall {
   double starSize;
   bool hasLight;
   final List<Offset> load = [Offset.zero];
   StarLoad(double width, double height,
-      {double previousSlopeHeight, double centerX})
+      {double previousWallHeight, double centerX})
       : super(width, height,
-            previousSlopeHeight: previousSlopeHeight,
+            previousWallHeight: previousWallHeight,
             centerX: centerX,
             fromTop: true) {
     starSize = 0.6 / (Random().nextInt(6) + 1);
@@ -46,7 +46,7 @@ class _StarLoadPainter extends CustomPainter {
           ..moveTo(0, 0)
           ..lineTo(starLoad.starSize, 0)
           ..moveTo(starLoad.starSize / 2, -starLoad.starSize / 2)
-          ..lineTo(starLoad.starSize / 2, starLoad.starSize / 2) {}
+          ..lineTo(starLoad.starSize / 2, starLoad.starSize / 2);
 
   @override
   void paint(Canvas canvas, Size size) {

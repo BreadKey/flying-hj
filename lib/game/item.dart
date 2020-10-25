@@ -1,5 +1,5 @@
 import 'package:flying_hj/game/flyer.dart';
-import 'package:flying_hj/game/game_object.dart';
+import 'package:flying_hj/game/foundation/game_object.dart';
 
 abstract class Item extends GameObject {
   double activeTime;

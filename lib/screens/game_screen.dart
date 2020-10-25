@@ -112,7 +112,7 @@ class _GameScreenState extends State<GameScreen>
                                   key: ValueKey("background"),
                                   builder: (_, game, __) => Transform.translate(
                                         offset: Offset(
-                                            game.flyer.x * 0.999 * gameRatio -
+                                            game.flyer.x * 0.995 * gameRatio -
                                                 game.flyer.width * gameRatio,
                                             0),
                                         child: BackgroundPainter(),

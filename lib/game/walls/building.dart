@@ -111,7 +111,7 @@ class _BuildingPainter extends CustomPainter {
       _paint.strokeWidth = windowStrokeWidth / 4;
 
       final x =
-          isDowarding ? windowStrokeWidth : building.width - windowStrokeWidth;
+          isDowarding ? building.width - windowStrokeWidth : windowStrokeWidth;
 
       canvas.drawLine(Offset(x, 0), Offset(x, lightingLoadHeight), _paint);
     }

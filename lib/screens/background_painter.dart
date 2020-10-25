@@ -11,7 +11,7 @@ class BackgroundPainter extends StatelessWidget {
         minHeight: MediaQuery.of(context).size.height * 0.618,
         maxWidth: MediaQuery.of(context).size.height * 6.18,
         child: Opacity(
-          opacity: 0.618,
+          opacity: 0.1618,
           child: Image.asset(
             "assets/background.png",
             fit: BoxFit.fitHeight,

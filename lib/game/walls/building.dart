@@ -85,10 +85,10 @@ class _BuildingPainter extends CustomPainter {
           Offset(x, y), Offset(x, y + windowStrokeWidth * 1.2), _paint);
     }
 
-    bool isDowarding;
+    bool isDownwarding;
 
     if (building.hasGuideLight || building.hasLightingLoad) {
-      isDowarding = building.previousWallHeight != null &&
+      isDownwarding = building.previousWallHeight != null &&
           building.previousWallHeight > building.height;
     }
 
@@ -96,7 +96,7 @@ class _BuildingPainter extends CustomPainter {
       _paint.strokeCap = StrokeCap.round;
       _paint.strokeWidth = windowStrokeWidth / 2;
       _paint.color = colorFlameScarlet;
-      if (isDowarding) {
+      if (isDownwarding) {
         canvas.drawPoints(PointMode.points,
             [Offset(building.width - 0.1, buildingRect.top)], _paint);
       } else {
@@ -111,7 +111,7 @@ class _BuildingPainter extends CustomPainter {
       _paint.strokeWidth = windowStrokeWidth / 4;
 
       final x =
-          isDowarding ? building.width - windowStrokeWidth : windowStrokeWidth;
+          isDownwarding ? building.width - windowStrokeWidth : windowStrokeWidth;
 
       canvas.drawLine(Offset(x, 0), Offset(x, lightingLoadHeight), _paint);
     }

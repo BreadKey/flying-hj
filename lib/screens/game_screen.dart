@@ -9,7 +9,7 @@ import 'package:flying_hj/game/moon.dart';
 import 'package:flying_hj/screens/game_object_renderer.dart';
 import 'package:provider/provider.dart';
 
-import 'background_painter.dart';
+import 'background_screen.dart';
 
 class GameScreen extends StatefulWidget {
   @override
@@ -115,7 +115,7 @@ class _GameScreenState extends State<GameScreen>
                                             game.flyer.x * 0.995 * gameRatio -
                                                 game.flyer.width * gameRatio,
                                             0),
-                                        child: BackgroundPainter(),
+                                        child: BackgroundScreen(),
                                       )),
                               Consumer<Field>(
                                 key: ValueKey("field"),

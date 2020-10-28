@@ -7,9 +7,10 @@ class Bridge extends Wall {
       : super(width, height, centerX: centerX, fromTop: false);
 
   @override
-  Widget get sprite => const CustomPaint(
+  Widget get sprite => const RepaintBoundary(
+          child: const CustomPaint(
         painter: const _BridgePainter(),
-      );
+      ));
 }
 
 class _BridgePainter extends CustomPainter {

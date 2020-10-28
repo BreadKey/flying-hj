@@ -12,12 +12,16 @@ class Moon extends GameObject with ChangeNotifier {
   }
 
   @override
-  Widget get sprite => CustomPaint(
-        painter: _MoonPainter(),
+  Widget get sprite => const RepaintBoundary(
+        child: const CustomPaint(
+          painter: const _MoonPainter(),
+        ),
       );
 }
 
 class _MoonPainter extends CustomPainter {
+  const _MoonPainter();
+
   @override
   void paint(Canvas canvas, Size size) {
     canvas.drawOval(Rect.fromLTWH(0, 0, size.width, size.height),

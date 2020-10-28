@@ -33,7 +33,7 @@ class Building extends Wall {
 
     hasLightingLoad = canHaveLightingLoad && Random().nextInt(20) == 0;
 
-    _sprite = Container(
+    _sprite = RepaintBoundary(
       child: CustomPaint(
         painter: _BuildingPainter(this),
       ),

@@ -22,8 +22,10 @@ class StarLoad extends Wall {
           Offset((Random().nextInt(11) - 7) / 5, -15 / Random().nextInt(10)));
     }
 
-    _sprite = CustomPaint(
-      painter: _StarLoadPainter(this),
+    _sprite = RepaintBoundary(
+      child: CustomPaint(
+        painter: _StarLoadPainter(this),
+      ),
     );
   }
 

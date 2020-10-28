@@ -354,8 +354,8 @@ class FlyingGame extends ChangeNotifier {
     final checkPointIndex = field.walls.length ~/ 8;
 
     if (flyer.left > field.walls[checkPointIndex].first.right) {
-      addNextPathByRandom();
       field.walls.removeRange(0, checkPointIndex);
+      addNextPathByRandom();
     }
   }
 

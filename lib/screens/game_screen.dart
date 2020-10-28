@@ -118,26 +118,28 @@ class _GameScreenState extends State<GameScreen>
                                         child: BackgroundScreen(),
                                       )),
                               Consumer<Field>(
-                                key: ValueKey("field"),
-                                builder: (_, field, __) => Stack(
-                                  alignment: Alignment.bottomLeft,
-                                  children: field.walls
-                                      .expand((e) => e)
-                                      .map((wall) => GameObjectRenderer(
-                                            gameObject: wall,
-                                            gameRatio: gameRatio,
-                                            key: ValueKey(wall),
-                                          ))
-                                      .toList()
-                                        ..addAll(field.items
-                                            .map((item) => GameObjectRenderer(
-                                                  gameObject: item,
-                                                  gameRatio: gameRatio,
-                                                  key: ValueKey(item),
-                                                ))
-                                            .toList()),
-                                ),
-                              ),
+                                  key: ValueKey("field"),
+                                  builder: (_, field, __) => Stack(
+                                        alignment: Alignment.bottomLeft,
+                                        children: RepaintBoundary.wrapAll(
+                                          field.walls
+                                              .expand((e) => e)
+                                              .map((wall) => GameObjectRenderer(
+                                                    gameObject: wall,
+                                                    gameRatio: gameRatio,
+                                                    key: ValueKey(wall),
+                                                  ))
+                                              .toList()
+                                                ..addAll(field.items
+                                                    .map((item) =>
+                                                        GameObjectRenderer(
+                                                          gameObject: item,
+                                                          gameRatio: gameRatio,
+                                                          key: ValueKey(item),
+                                                        ))
+                                                    .toList()),
+                                        ),
+                                      )),
                               Consumer<FlyingGame>(
                                 key: ValueKey("flyer"),
                                 builder: (context, _, __) => GameObjectRenderer(

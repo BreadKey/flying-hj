@@ -108,15 +108,10 @@ class _GameScreenState extends State<GameScreen>
                           child: Stack(
                             alignment: Alignment.bottomLeft,
                             children: [
-                              Consumer<FlyingGame>(
-                                  key: ValueKey("background"),
-                                  builder: (_, game, __) => Transform.translate(
-                                        offset: Offset(
-                                            game.flyer.x * 0.995 * gameRatio -
-                                                game.flyer.width * gameRatio,
-                                            0),
-                                        child: BackgroundScreen(),
-                                      )),
+                              Provider<double>.value(
+                                value: gameRatio,
+                                child: const BackgroundScreen(),
+                              ),
                               Consumer<Field>(
                                 key: ValueKey("field"),
                                 builder: (_, field, __) => Stack(

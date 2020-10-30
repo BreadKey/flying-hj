@@ -10,7 +10,6 @@ import 'package:flying_hj/game/foundation/game_object.dart';
 import 'package:flying_hj/game/items/straight_block.dart';
 import 'package:flying_hj/game/moon.dart';
 import 'package:flying_hj/game/path_maker.dart';
-import 'package:flying_hj/game/skyscraper.dart';
 import 'package:rxdart/subjects.dart';
 
 import 'item.dart';
@@ -51,8 +50,6 @@ class FlyingGame extends ChangeNotifier {
 
   final Moon moon = Moon();
 
-  final _skyscraperQueue = Queue<Skyscraper>();
-
   final _gameOverSubject = PublishSubject<bool>();
   Stream<bool> get gameOverStream => _gameOverSubject.stream;
 
@@ -64,14 +61,9 @@ class FlyingGame extends ChangeNotifier {
 
     _levelVelocityX = defaultVelocityX;
 
-    _pathMaker.startPoint = Offset(
-        0, gameHeight / 2 + (-gravity * firstFallTime * firstFallTime) / 2);
-    _pathMaker.startVelocity = Offset(_levelVelocityX, 0);
-
-    flyer.setPoint(_pathMaker.startPoint);
-    flyer.angle = 0;
-    flyer.velocityX = _levelVelocityX;
-    flyer.velocityY = 0;
+    setStartPoint(Offset(
+        0, gameHeight / 2 + (-gravity * firstFallTime * firstFallTime) / 2));
+    setStartVelocity(Offset(_levelVelocityX, 0));
 
     isFlying = false;
 
@@ -104,6 +96,17 @@ class FlyingGame extends ChangeNotifier {
     flyer.start();
   }
 
+  void setStartPoint(Offset point) {
+    flyer.setPoint(point);
+    _pathMaker.startPoint = point;
+  }
+
+  void setStartVelocity(Offset velocity) {
+    flyer.velocityX = velocity.dx;
+    flyer.velocityY = velocity.dy;
+    _pathMaker.startVelocity = velocity;
+  }
+
   @override
   void dispose() {
     _frameGenerator?.cancel();
@@ -123,7 +126,6 @@ class FlyingGame extends ChangeNotifier {
 
     _itemQueue.clear();
     _activatedItems.clear();
-    _skyscraperQueue.clear();
   }
 
   void update() {
@@ -159,7 +161,6 @@ class FlyingGame extends ChangeNotifier {
     _checkGameOver();
     _refreshWalls();
     _checkItem();
-    _checkSkyscraper();
 
     accTime += timeDelta;
 
@@ -239,37 +240,6 @@ class FlyingGame extends ChangeNotifier {
         airTime, _pathMaker.pathHeight + flyer.height * 2, _levelVelocityX);
 
     return addWalls(walls);
-  }
-
-  void addSkyscraper() {
-    Offset startPoint = _pathMaker.startPoint;
-    final timeToReachTop = sqrt(2 * (gameHeight - startPoint.dy) / flyPower);
-
-    final parabolaForWidePath = _pathMaker.generateParabola(
-        startPoint,
-        Offset(_levelVelocityX, 0),
-        Offset(0, flyPower),
-        timeToReachTop * _levelVelocityX);
-
-    final skyscraperPoint = parabolaForWidePath.last;
-
-    parabolaForWidePath.removeLast();
-
-    final deltaX = (parabolaForWidePath.last.dx - startPoint.dx) /
-        (parabolaForWidePath.length);
-
-    final path = List.generate(parabolaForWidePath.length,
-        (index) => startPoint + Offset(deltaX * index, 0));
-
-    final halfPathHeight = _pathMaker.pathHeight / 2;
-
-    final wideWalls = _pathMaker.generateWalls(
-        path,
-        parabolaForWidePath
-            .map((point) => startPoint.dy - point.dy + halfPathHeight)
-            .toList());
-
-    addWalls(wideWalls);
   }
 
   void addWalls(Iterable<Iterable<GameObject>> walls) {
@@ -369,23 +339,6 @@ class FlyingGame extends ChangeNotifier {
     }
   }
 
-  void _checkSkyscraper() {
-    if (_skyscraperQueue.isEmpty) return;
-    final nearest = _skyscraperQueue.first;
-    if (isCollided(flyer, nearest)) {
-      if (canCollapse(flyer, nearest)) {
-        nearest.collapse();
-      } else {
-        gameOver();
-      }
-    } else if (flyer.left > nearest.right + 1) {
-      removeSkyscraper(nearest);
-    }
-  }
-
-  bool canCollapse(GameObject collider, Skyscraper skyscraper) =>
-      (collider.y - skyscraper.crackPointY).abs() < 2;
-
   void startFly() {
     isFlying = true;
     flyer.fly();
@@ -410,10 +363,5 @@ class FlyingGame extends ChangeNotifier {
   void removeItem(Item item) {
     field.removeItem(item);
     _itemQueue.remove(item);
-  }
-
-  void removeSkyscraper(Skyscraper skyscraper) {
-    field.removeSkyscraper(skyscraper);
-    _skyscraperQueue.remove(skyscraper);
   }
 }

@@ -1,21 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flying_hj/game/foundation/game_object.dart';
-import 'package:flying_hj/game/skyscraper.dart';
 
 import 'item.dart';
 
 class Field extends ChangeNotifier {
-  final List<List<GameObject>> walls = [];
+  final List<List<GameObject>> path = [];
   final List<Item> items = <Item>[];
 
-  void addWalls(Iterable<Iterable<GameObject>> walls) {
-    this.walls.addAll(walls);
+  void addpath(Iterable<Iterable<GameObject>> path) {
+    this.path.addAll(path);
 
     notifyListeners();
   }
 
   void clear() {
-    walls.clear();
+    path.clear();
     items.clear();
     notifyListeners();
   }

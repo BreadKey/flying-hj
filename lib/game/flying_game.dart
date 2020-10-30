@@ -35,7 +35,7 @@ class FlyingGame extends ChangeNotifier {
   bool isGameOver = false;
 
   final _hurdleQueue = Queue<GameObject>();
-  final _wallQueue = Queue<List<GameObject>>();
+  final _pathQueue = Queue<List<GameObject>>();
 
   final Field field = Field();
   final _itemQueue = Queue<Item>();
@@ -122,7 +122,7 @@ class FlyingGame extends ChangeNotifier {
 
     _hurdleQueue.clear();
 
-    _wallQueue.clear();
+    _pathQueue.clear();
 
     _itemQueue.clear();
     _activatedItems.clear();
@@ -159,7 +159,7 @@ class FlyingGame extends ChangeNotifier {
     _updateItems();
     _moveFlyer();
     _checkGameOver();
-    _refreshWalls();
+    _refreshPath();
     _checkItem();
 
     accTime += timeDelta;
@@ -222,9 +222,9 @@ class FlyingGame extends ChangeNotifier {
 
   void addParabolaPath(double airTime, Offset acceleration,
       {Offset offset: Offset.zero}) {
-    final walls =
+    final path =
         _pathMaker.generateParabolaPath(airTime, acceleration, _levelVelocityX);
-    return addWalls(walls);
+    return addPath(path);
   }
 
   void addStraightPath({double airTime: 2, bool smoother: false}) {
@@ -236,15 +236,15 @@ class FlyingGame extends ChangeNotifier {
         airTime / 2, airTime / 2, _levelVelocityX * airTime - flyer.width * 2)
       ..setPoint(_pathMaker.startPoint));
 
-    final walls = _pathMaker.generateStraightPath(
+    final path = _pathMaker.generateStraightPath(
         airTime, _pathMaker.pathHeight + flyer.height * 2, _levelVelocityX);
 
-    return addWalls(walls);
+    return addPath(path);
   }
 
-  void addWalls(Iterable<Iterable<GameObject>> walls) {
-    field.addWalls(walls);
-    _wallQueue.addAll(walls);
+  void addPath(Iterable<Iterable<GameObject>> path) {
+    field.addpath(path);
+    _pathQueue.addAll(path);
   }
 
   bool isCollided(GameObject a, GameObject b) {
@@ -291,11 +291,11 @@ class FlyingGame extends ChangeNotifier {
 
     final objects = <GameObject>[];
 
-    if (_wallQueue.isNotEmpty) {
-      objects.addAll(_wallQueue.first);
+    if (_pathQueue.isNotEmpty) {
+      objects.addAll(_pathQueue.first);
 
-      if (_wallQueue.first.first.right < flyer.left) {
-        _wallQueue.removeFirst();
+      if (_pathQueue.first.first.right < flyer.left) {
+        _pathQueue.removeFirst();
       }
     }
 
@@ -315,16 +315,16 @@ class FlyingGame extends ChangeNotifier {
       }
     }
 
-    if (_hurdleQueue.isEmpty && _wallQueue.isEmpty) {
+    if (_hurdleQueue.isEmpty && _pathQueue.isEmpty) {
       gameOver();
     }
   }
 
-  void _refreshWalls() {
-    final checkPointIndex = field.walls.length ~/ 8;
+  void _refreshPath() {
+    final checkPointIndex = field.path.length ~/ 8;
 
-    if (flyer.left > field.walls[checkPointIndex].first.right) {
-      field.walls.removeRange(0, checkPointIndex);
+    if (flyer.left > field.path[checkPointIndex].first.right) {
+      field.path.removeRange(0, checkPointIndex);
       addNextPathByRandom();
     }
   }

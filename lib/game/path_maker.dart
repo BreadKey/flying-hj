@@ -40,7 +40,7 @@ class PathMaker {
     startPoint = parabola.last;
     startVelocity += acceleration * airTime;
 
-    return generateWalls(
+    return generatePath(
         parabola..removeLast(), parabola.map((_) => pathHeight / 2).toList());
   }
 
@@ -69,7 +69,7 @@ class PathMaker {
     startPoint = goalPoint;
     startVelocity = Offset(velocityX, 0);
 
-    return generateWalls(
+    return generatePath(
       path,
       wallParabola.map((point) => startY - point.dy + halfPathHeight).toList()
         ..add(halfPathHeight),
@@ -97,26 +97,26 @@ class PathMaker {
     return parabola;
   }
 
-  Iterable<List<GameObject>> generateWalls(
-      List<Offset> path, List<double> pathHeights,
+  Iterable<List<GameObject>> generatePath(
+      List<Offset> points, List<double> pathHeights,
       {int bridgeDice = 5}) {
-    assert(path.length >= 2);
+    assert(points.length >= 2);
 
-    final width = path[1].dx - path[0].dx;
+    final width = points[1].dx - points[0].dx;
 
     bool isBridge;
     bool previousWasBridge = false;
     double bridgeStartY;
 
-    final walls = <List<GameObject>>[];
+    final path = <List<GameObject>>[];
 
-    for (int index = 0; index < path.length; index++) {
-      final point = path[index];
+    for (int index = 0; index < points.length; index++) {
+      final point = points[index];
 
       final buildingHeight =
           calculateBuildingHeight(point.dy, pathHeights[index]);
 
-      final topWallHeight =
+      final starLoadHeight =
           max(0.0, FlyingGame.gameHeight - (point.dy + pathHeights[index]));
 
       if (previousWasBridge) {
@@ -126,9 +126,9 @@ class PathMaker {
       if (buildingHeight == _previousBottomWallHeight) {
         if (isBridge == null) {
           isBridge = canBeBridge(
-                  walls,
-                  List.generate(path.length,
-                      (index) => path[index].dy - pathHeights[index]),
+                  path,
+                  List.generate(points.length,
+                      (index) => points[index].dy - pathHeights[index]),
                   index) &&
               Random().nextInt(bridgeDice) == 0;
           if (isBridge) {
@@ -137,11 +137,11 @@ class PathMaker {
             isBridge = null;
           }
         } else if (isBridge) {
-          if (index == path.length - 1) {
+          if (index == points.length - 1) {
             isBridge = false;
             previousWasBridge = true;
-          } else if (index < path.length - 2) {
-            if (path[index + 1].dy -
+          } else if (index < points.length - 2) {
+            if (points[index + 1].dy -
                     pathHeights[index + 1] +
                     sameBuildingError <
                 bridgeStartY) isBridge = false;
@@ -155,10 +155,10 @@ class PathMaker {
         }
       }
 
-      final generatedWalls = [
+      final walls = [
         StarLoad(
           width,
-          topWallHeight,
+          starLoadHeight,
           previousWallHeight: _previousTopWallHeight,
           centerX: point.dx,
         ),
@@ -171,12 +171,12 @@ class PathMaker {
       ];
 
       _previousBottomWallHeight = buildingHeight;
-      _previousTopWallHeight = topWallHeight;
+      _previousTopWallHeight = starLoadHeight;
 
-      walls.add(generatedWalls);
+      path.add(walls);
     }
 
-    return walls;
+    return path;
   }
 
   double calculateBuildingHeight(double y, double pathHeight) {
@@ -191,10 +191,10 @@ class PathMaker {
     return buildingHeight;
   }
 
-  bool canBeBridge(Iterable<List<GameObject>> walls,
+  bool canBeBridge(Iterable<List<GameObject>> path,
           List<double> buildingHeights, index) =>
       index < buildingHeights.length - 2 &&
       buildingHeights[index + 1] > buildingHeights[index] &&
-      walls.isNotEmpty &&
-      !(walls.last.last as Building).hasLightingLoad;
+      path.isNotEmpty &&
+      !(path.last.last as Building).hasLightingLoad;
 }

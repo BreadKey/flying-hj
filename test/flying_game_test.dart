@@ -1,3 +1,5 @@
+import 'dart:collection';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flying_hj/game/path_maker.dart';
 
@@ -8,8 +10,7 @@ void main() {
     pathMaker = PathMaker();
   });
 
-  tearDown(() {
-  });
+  tearDown(() {});
 
   test("Parabola", () {
     double moveDistnace = 3;
@@ -42,6 +43,14 @@ void main() {
         unitX: moveDistnace / 5);
 
     printParabola(parabola);
+  });
+
+  test("queue test", () {
+    final queue = Queue<int>()..addAll([1, 2, 3, 4]);
+
+    queue.take(2);
+
+    print(queue.length);
   });
 }
 

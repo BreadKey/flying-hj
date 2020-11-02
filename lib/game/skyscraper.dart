@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flying_hj/game/foundation/game_object.dart';
 
+@deprecated
 abstract class Skyscraper extends GameObject {
   final double crackPointY;
 

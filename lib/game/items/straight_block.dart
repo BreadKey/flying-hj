@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flying_hj/colors.dart';
 import 'package:flying_hj/game/flyer.dart';
 import 'package:flying_hj/game/item.dart';
 
@@ -9,20 +8,17 @@ class StraightBlock extends Item {
   final double velocityX;
   StraightBlock(double activeTime, this.airTime, this.distanceX)
       : velocityX = distanceX / airTime,
-        super(1.6, 1.6, activeTime);
+        super(1.4, 1.4, 1.6, 1.6, activeTime);
 
   double _lastVelocityX;
 
   @override
-  Widget get sprite => Material(
-        color: colorSunOrange,
-        elevation: 4,
-        borderRadius: BorderRadius.circular(4),
-        child: Center(child: const Icon(
-          Icons.forward,
-          color: Colors.white,
-          size: 48,
-        ),)
+  Widget get sprite => RepaintBoundary(
+        child: Image.asset(
+          "assets/americano.png",
+          filterQuality: FilterQuality.none,
+          fit: BoxFit.contain,
+        ),
       );
 
   @override

@@ -10,7 +10,7 @@ import 'package:flying_hj/game/foundation/game_object.dart';
 import 'package:flying_hj/game/items/straight_block.dart';
 import 'package:flying_hj/game/moon.dart';
 import 'package:flying_hj/game/path_maker.dart';
-import 'package:flying_hj/game/skyscraper.dart';
+import 'package:flying_hj/game/wall.dart';
 import 'package:rxdart/subjects.dart';
 
 import 'item.dart';
@@ -36,8 +36,7 @@ class FlyingGame extends ChangeNotifier {
   bool isGameOver = false;
 
   final _hurdleQueue = Queue<GameObject>();
-  final _wallQueue = Queue<List<GameObject>>();
-
+  final _pathQueue = Queue<List<GameObject>>();
   final Field field = Field();
   final _itemQueue = Queue<Item>();
   final _activatedItems = List<Item>();
@@ -51,8 +50,6 @@ class FlyingGame extends ChangeNotifier {
 
   final Moon moon = Moon();
 
-  final _skyscraperQueue = Queue<Skyscraper>();
-
   final _gameOverSubject = PublishSubject<bool>();
   Stream<bool> get gameOverStream => _gameOverSubject.stream;
 
@@ -64,14 +61,9 @@ class FlyingGame extends ChangeNotifier {
 
     _levelVelocityX = defaultVelocityX;
 
-    _pathMaker.startPoint = Offset(
-        0, gameHeight / 2 + (-gravity * firstFallTime * firstFallTime) / 2);
-    _pathMaker.startVelocity = Offset(_levelVelocityX, 0);
-
-    flyer.setPoint(_pathMaker.startPoint);
-    flyer.angle = 0;
-    flyer.velocityX = _levelVelocityX;
-    flyer.velocityY = 0;
+    setStartPoint(Offset(
+        0, gameHeight / 2 + (-gravity * firstFallTime * firstFallTime) / 2));
+    setStartVelocity(Offset(_levelVelocityX, 0));
 
     isFlying = false;
 
@@ -104,6 +96,17 @@ class FlyingGame extends ChangeNotifier {
     flyer.start();
   }
 
+  void setStartPoint(Offset point) {
+    flyer.setPoint(point);
+    _pathMaker.startPoint = point;
+  }
+
+  void setStartVelocity(Offset velocity) {
+    flyer.velocityX = velocity.dx;
+    flyer.velocityY = velocity.dy;
+    _pathMaker.startVelocity = velocity;
+  }
+
   @override
   void dispose() {
     _frameGenerator?.cancel();
@@ -119,11 +122,10 @@ class FlyingGame extends ChangeNotifier {
 
     _hurdleQueue.clear();
 
-    _wallQueue.clear();
+    _pathQueue.clear();
 
     _itemQueue.clear();
     _activatedItems.clear();
-    _skyscraperQueue.clear();
   }
 
   void update() {
@@ -157,9 +159,8 @@ class FlyingGame extends ChangeNotifier {
     _updateItems();
     _moveFlyer();
     _checkGameOver();
-    _refreshWalls();
+    _refreshPath();
     _checkItem();
-    _checkSkyscraper();
 
     accTime += timeDelta;
 
@@ -221,9 +222,9 @@ class FlyingGame extends ChangeNotifier {
 
   void addParabolaPath(double airTime, Offset acceleration,
       {Offset offset: Offset.zero}) {
-    final walls =
+    final path =
         _pathMaker.generateParabolaPath(airTime, acceleration, _levelVelocityX);
-    return addWalls(walls);
+    return addPath(path);
   }
 
   void addStraightPath({double airTime: 2, bool smoother: false}) {
@@ -235,46 +236,15 @@ class FlyingGame extends ChangeNotifier {
         airTime / 2, airTime / 2, _levelVelocityX * airTime - flyer.width * 2)
       ..setPoint(_pathMaker.startPoint));
 
-    final walls = _pathMaker.generateStraightPath(
+    final path = _pathMaker.generateStraightPath(
         airTime, _pathMaker.pathHeight + flyer.height * 2, _levelVelocityX);
 
-    return addWalls(walls);
+    return addPath(path);
   }
 
-  void addSkyscraper() {
-    Offset startPoint = _pathMaker.startPoint;
-    final timeToReachTop = sqrt(2 * (gameHeight - startPoint.dy) / flyPower);
-
-    final parabolaForWidePath = _pathMaker.generateParabola(
-        startPoint,
-        Offset(_levelVelocityX, 0),
-        Offset(0, flyPower),
-        timeToReachTop * _levelVelocityX);
-
-    final skyscraperPoint = parabolaForWidePath.last;
-
-    parabolaForWidePath.removeLast();
-
-    final deltaX = (parabolaForWidePath.last.dx - startPoint.dx) /
-        (parabolaForWidePath.length);
-
-    final path = List.generate(parabolaForWidePath.length,
-        (index) => startPoint + Offset(deltaX * index, 0));
-
-    final halfPathHeight = _pathMaker.pathHeight / 2;
-
-    final wideWalls = _pathMaker.generateWalls(
-        path,
-        parabolaForWidePath
-            .map((point) => startPoint.dy - point.dy + halfPathHeight)
-            .toList());
-
-    addWalls(wideWalls);
-  }
-
-  void addWalls(Iterable<Iterable<GameObject>> walls) {
-    field.addWalls(walls);
-    _wallQueue.addAll(walls);
+  void addPath(Iterable<Iterable<GameObject>> path) {
+    field.addPath(path);
+    _pathQueue.addAll(path);
   }
 
   bool isCollided(GameObject a, GameObject b) {
@@ -321,11 +291,11 @@ class FlyingGame extends ChangeNotifier {
 
     final objects = <GameObject>[];
 
-    if (_wallQueue.isNotEmpty) {
-      objects.addAll(_wallQueue.first);
+    if (_pathQueue.isNotEmpty) {
+      objects.addAll(_pathQueue.first);
 
-      if (_wallQueue.first.first.right < flyer.left) {
-        _wallQueue.removeFirst();
+      if (_pathQueue.first.first.right < flyer.left) {
+        _pathQueue.removeFirst();
       }
     }
 
@@ -345,17 +315,17 @@ class FlyingGame extends ChangeNotifier {
       }
     }
 
-    if (_hurdleQueue.isEmpty && _wallQueue.isEmpty) {
+    if (_hurdleQueue.isEmpty && _pathQueue.isEmpty) {
       gameOver();
     }
   }
 
-  void _refreshWalls() {
+  void _refreshPath() {
     final checkPointIndex = field.walls.length ~/ 8;
 
-    if (flyer.left > field.walls[checkPointIndex].first.right) {
-      addNextPathByRandom();
+    if (flyer.left > field.walls[checkPointIndex].right) {
       field.walls.removeRange(0, checkPointIndex);
+      addNextPathByRandom();
     }
   }
 
@@ -368,23 +338,6 @@ class FlyingGame extends ChangeNotifier {
       removeItem(nearest);
     }
   }
-
-  void _checkSkyscraper() {
-    if (_skyscraperQueue.isEmpty) return;
-    final nearest = _skyscraperQueue.first;
-    if (isCollided(flyer, nearest)) {
-      if (canCollapse(flyer, nearest)) {
-        nearest.collapse();
-      } else {
-        gameOver();
-      }
-    } else if (flyer.left > nearest.right + 1) {
-      removeSkyscraper(nearest);
-    }
-  }
-
-  bool canCollapse(GameObject collider, Skyscraper skyscraper) =>
-      (collider.y - skyscraper.crackPointY).abs() < 2;
 
   void startFly() {
     isFlying = true;
@@ -410,10 +363,5 @@ class FlyingGame extends ChangeNotifier {
   void removeItem(Item item) {
     field.removeItem(item);
     _itemQueue.remove(item);
-  }
-
-  void removeSkyscraper(Skyscraper skyscraper) {
-    field.removeSkyscraper(skyscraper);
-    _skyscraperQueue.remove(skyscraper);
   }
 }

@@ -116,8 +116,8 @@ class _GameScreenState extends State<GameScreen>
                                 key: ValueKey("field"),
                                 builder: (_, field, __) => Stack(
                                   alignment: Alignment.bottomLeft,
-                                  children: field.path
-                                      .expand((e) => e)
+                                  children: field.walls
+                                      .take(70)
                                       .map((wall) => GameObjectRenderer(
                                             gameObject: wall,
                                             gameRatio: gameRatio,

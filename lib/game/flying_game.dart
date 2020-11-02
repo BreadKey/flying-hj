@@ -10,6 +10,7 @@ import 'package:flying_hj/game/foundation/game_object.dart';
 import 'package:flying_hj/game/items/straight_block.dart';
 import 'package:flying_hj/game/moon.dart';
 import 'package:flying_hj/game/path_maker.dart';
+import 'package:flying_hj/game/wall.dart';
 import 'package:rxdart/subjects.dart';
 
 import 'item.dart';
@@ -36,7 +37,6 @@ class FlyingGame extends ChangeNotifier {
 
   final _hurdleQueue = Queue<GameObject>();
   final _pathQueue = Queue<List<GameObject>>();
-
   final Field field = Field();
   final _itemQueue = Queue<Item>();
   final _activatedItems = List<Item>();
@@ -243,7 +243,7 @@ class FlyingGame extends ChangeNotifier {
   }
 
   void addPath(Iterable<Iterable<GameObject>> path) {
-    field.addpath(path);
+    field.addPath(path);
     _pathQueue.addAll(path);
   }
 
@@ -321,10 +321,10 @@ class FlyingGame extends ChangeNotifier {
   }
 
   void _refreshPath() {
-    final checkPointIndex = field.path.length ~/ 8;
+    final checkPointIndex = field.walls.length ~/ 8;
 
-    if (flyer.left > field.path[checkPointIndex].first.right) {
-      field.path.removeRange(0, checkPointIndex);
+    if (flyer.left > field.walls[checkPointIndex].right) {
+      field.walls.removeRange(0, checkPointIndex);
       addNextPathByRandom();
     }
   }

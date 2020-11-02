@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flying_hj/colors.dart';
 import 'package:flying_hj/game/foundation/game_object.dart';
 
 class Moon extends GameObject with ChangeNotifier {
-  Moon() : super(4, 4, 4, 4);
+  Moon() : super(4.8, 4.8, 4.8, 4.8);
 
   @override
   void setPoint(Offset point) {

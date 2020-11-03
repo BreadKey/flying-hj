@@ -10,7 +10,6 @@ import 'package:flying_hj/game/foundation/game_object.dart';
 import 'package:flying_hj/game/items/straight_block.dart';
 import 'package:flying_hj/game/moon.dart';
 import 'package:flying_hj/game/path_maker.dart';
-import 'package:flying_hj/game/wall.dart';
 import 'package:rxdart/subjects.dart';
 
 import 'item.dart';
@@ -23,6 +22,7 @@ class FlyingGame extends ChangeNotifier {
   static const double gameHeight = 15;
   static const double defaultVelocityX = 12;
   static const double maxVelocityX = 40;
+  static const int visibleWallLength = 54;
 
   bool isFlying = false;
 
@@ -52,6 +52,8 @@ class FlyingGame extends ChangeNotifier {
 
   final _gameOverSubject = PublishSubject<bool>();
   Stream<bool> get gameOverStream => _gameOverSubject.stream;
+
+  int _removedWallCount = 0;
 
   void startGame() {
     isGameOver = false;
@@ -94,6 +96,7 @@ class FlyingGame extends ChangeNotifier {
     });
 
     flyer.start();
+    _removedWallCount = 0;
   }
 
   void setStartPoint(Offset point) {
@@ -321,11 +324,19 @@ class FlyingGame extends ChangeNotifier {
   }
 
   void _refreshPath() {
-    final checkPointIndex = field.walls.length ~/ 8;
+    final refreshStep = _levelVelocityX / 5;
 
-    if (flyer.left > field.walls[checkPointIndex].right) {
-      field.walls.removeRange(0, checkPointIndex);
-      addNextPathByRandom();
+    if (field.walls.first.x + 2 < flyer.x) {
+      field.walls.removeRange(0, 2);
+      _removedWallCount++;
+    }
+
+    if (_removedWallCount >= refreshStep) {
+      _removedWallCount = 0;
+      while (field.walls.last.x < flyer.x + _levelVelocityX * 2.5) {
+        addNextPathByRandom();
+      }
+      field.notifyListeners();
     }
   }
 

@@ -117,7 +117,7 @@ class _GameScreenState extends State<GameScreen>
                                 builder: (_, field, __) => Stack(
                                   alignment: Alignment.bottomLeft,
                                   children: field.walls
-                                      .take(70)
+                                      .take(FlyingGame.visibleWallLength)
                                       .map((wall) => GameObjectRenderer(
                                             gameObject: wall,
                                             gameRatio: gameRatio,

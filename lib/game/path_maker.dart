@@ -22,7 +22,9 @@ class PathMaker {
   }
 
   double _previousTopWallHeight;
+  double get previousTopWallHeight => _previousTopWallHeight;
   double _previousBottomWallHeight;
+  double get previousBottomWallHeight => _previousBottomWallHeight;
 
   void reset() {
     _previousTopWallHeight = null;
@@ -184,7 +186,8 @@ class PathMaker {
 
     if (buildingHeight != 0 &&
         _previousBottomWallHeight != null &&
-        (buildingHeight - _previousBottomWallHeight).abs() < sameBuildingError) {
+        (buildingHeight - _previousBottomWallHeight).abs() <
+            sameBuildingError) {
       return _previousBottomWallHeight;
     }
 

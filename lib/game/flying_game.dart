@@ -3,6 +3,7 @@ import 'dart:collection';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flying_hj/game/dungeon_hole.dart';
 import 'package:flying_hj/game/field.dart';
 import 'package:flying_hj/game/flyer.dart';
 import 'package:flying_hj/game/flyers/hyeonjung.dart';
@@ -11,6 +12,7 @@ import 'package:flying_hj/game/items/straight_block.dart';
 import 'package:flying_hj/game/moon.dart';
 import 'package:flying_hj/game/path_maker.dart';
 import 'package:rxdart/subjects.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'item.dart';
 
@@ -23,6 +25,8 @@ class FlyingGame extends ChangeNotifier {
   static const double defaultVelocityX = 12;
   static const double maxVelocityX = 40;
   static const int visibleWallLength = 54;
+  static const double distanceCanMakeDungeon = 2000;
+  static const double minDungeonHoleSpawnX = 200;
 
   bool isFlying = false;
 
@@ -54,6 +58,16 @@ class FlyingGame extends ChangeNotifier {
   Stream<bool> get gameOverStream => _gameOverSubject.stream;
 
   int _removedWallCount = 0;
+
+  bool _canMakeDungeon;
+  bool _wasDungeonMade = false;
+
+  final DungeonHole dungeonHole = DungeonHole();
+
+  Future<void> init() async {
+    final prefs = await SharedPreferences.getInstance();
+    _canMakeDungeon = prefs.getBool("canMakeDungeon") ?? false;
+  }
 
   void startGame() {
     isGameOver = false;
@@ -97,6 +111,9 @@ class FlyingGame extends ChangeNotifier {
 
     flyer.start();
     _removedWallCount = 0;
+
+    _wasDungeonMade = false;
+    dungeonHole.deactivate();
   }
 
   void setStartPoint(Offset point) {
@@ -117,6 +134,7 @@ class FlyingGame extends ChangeNotifier {
     field.dispose();
     moon.dispose();
     _gameOverSubject.close();
+    dungeonHole.dispose();
     super.dispose();
   }
 
@@ -161,6 +179,7 @@ class FlyingGame extends ChangeNotifier {
 
     _updateItems();
     _moveFlyer();
+    _checkDungeonHole();
     _checkGameOver();
     _refreshPath();
     _checkItem();
@@ -189,6 +208,12 @@ class FlyingGame extends ChangeNotifier {
     final airTime = 1 / (Random().nextInt(4) + 1);
 
     final startPoint = _pathMaker.startPoint;
+
+    if (startPoint.dx >= minDungeonHoleSpawnX &&
+        _canMakeDungeon &&
+        !_wasDungeonMade) {
+      makeDungeon(startPoint.dx);
+    }
 
     if (startPoint.dy > gameHeight - _pathMaker.pathHeight / 2) {
       _pathMaker.startVelocity = Offset(_levelVelocityX, 0);
@@ -264,6 +289,10 @@ class FlyingGame extends ChangeNotifier {
     _frameGenerator.cancel();
     flyer.dead();
     _gameOverSubject.sink.add(true);
+
+    if (flyer.x >= distanceCanMakeDungeon) {
+      setCanMakeDungeon(true);
+    }
   }
 
   void _updateItems() {
@@ -374,5 +403,31 @@ class FlyingGame extends ChangeNotifier {
   void removeItem(Item item) {
     field.removeItem(item);
     _itemQueue.remove(item);
+  }
+
+  Future<void> setCanMakeDungeon(bool value) async {
+    _canMakeDungeon = value;
+    final prefs = await SharedPreferences.getInstance();
+    prefs.setBool("canMakeDungeon", value);
+  }
+
+  void makeDungeon(double x) {
+    final currentWallLength = field.walls.length;
+    field.walls[currentWallLength - 2].canCollide = false;
+    field.walls[currentWallLength - 4].canCollide = false;
+    field.walls[currentWallLength - 6].canCollide = false;
+    dungeonHole.setPoint(Offset(x - dungeonHole.spriteWidth / 2,
+        gameHeight - _pathMaker.previousTopWallHeight));
+    dungeonHole.activate();
+    _wasDungeonMade = true;
+  }
+
+  void _checkDungeonHole() {
+    if (isCollided(flyer, dungeonHole)) {
+      gameOver();
+      setCanMakeDungeon(false);
+    } else if (dungeonHole.canCollide && dungeonHole.x + 2 < flyer.x) {
+      dungeonHole.deactivate();
+    }
   }
 }

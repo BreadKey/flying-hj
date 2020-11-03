@@ -24,7 +24,7 @@ class BackgroundScreen extends StatelessWidget {
                 minHeight: MediaQuery.of(context).size.height * 0.618,
                 maxWidth: MediaQuery.of(context).size.height * 6.18,
                 child: Image.asset(
-                  "assets/background3.png",
+                  "assets/background/3.png",
                   fit: BoxFit.fitHeight,
                   filterQuality: FilterQuality.none,
                   alignment: Alignment.bottomLeft,
@@ -50,7 +50,7 @@ class BackgroundScreen extends StatelessWidget {
                 minHeight: MediaQuery.of(context).size.height * 0.618,
                 maxWidth: MediaQuery.of(context).size.height * 6.18,
                 child: Image.asset(
-                  "assets/background1.png",
+                  "assets/background/1.png",
                   fit: BoxFit.fitHeight,
                   filterQuality: FilterQuality.none,
                   alignment: Alignment.bottomLeft,
@@ -75,14 +75,14 @@ class _Background2State extends State<Background2> {
 
   final sprites = [
     Image.asset(
-      "assets/background2-1.png",
+      "assets/background/2-1.png",
       fit: BoxFit.fitHeight,
       filterQuality: FilterQuality.none,
       alignment: Alignment.bottomLeft,
       gaplessPlayback: true,
     ),
     Image.asset(
-      "assets/background2-2.png",
+      "assets/background/2-2.png",
       fit: BoxFit.fitHeight,
       filterQuality: FilterQuality.none,
       alignment: Alignment.bottomLeft,

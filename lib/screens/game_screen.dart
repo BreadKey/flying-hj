@@ -3,9 +3,11 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flying_hj/colors.dart';
+import 'package:flying_hj/game/dungeon_hole.dart';
 import 'package:flying_hj/game/field.dart';
 import 'package:flying_hj/game/flying_game.dart';
 import 'package:flying_hj/game/moon.dart';
+import 'package:flying_hj/screens/dungeon_hole_renderer.dart';
 import 'package:flying_hj/screens/game_object_renderer.dart';
 import 'package:provider/provider.dart';
 
@@ -29,8 +31,7 @@ class _GameScreenState extends State<GameScreen>
   @override
   void initState() {
     super.initState();
-    game = FlyingGame();
-    game.startGame();
+    _initializeGame();
     _gameOverEffectController = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 100));
     _gameOverEffect = Tween(begin: Offset(0, 0), end: Offset(0.01, 0)).animate(
@@ -48,6 +49,12 @@ class _GameScreenState extends State<GameScreen>
         _gameOverEffectController.reverse();
       }
     });
+  }
+
+  Future<void> _initializeGame() async {
+    game = FlyingGame();
+    await game.init();
+    game.startGame();
   }
 
   @override
@@ -133,9 +140,20 @@ class _GameScreenState extends State<GameScreen>
                                             .toList()),
                                 ),
                               ),
+                              ChangeNotifierProvider.value(
+                                key: ValueKey("dungeonHole"),
+                                value: game.dungeonHole,
+                                child: Consumer<DungeonHole>(
+                                  builder: (context, dungeonHole, _) =>
+                                      DungeonHoleRenderer(
+                                          dungeonHole: dungeonHole,
+                                          gameRatio: gameRatio),
+                                ),
+                              ),
                               Consumer<FlyingGame>(
                                 key: ValueKey("flyer"),
-                                builder: (context, _, __) => GameObjectRenderer(
+                                builder: (context, game, __) =>
+                                    GameObjectRenderer(
                                   gameObject: game.flyer,
                                   gameRatio: gameRatio,
                                   key: ValueKey(game.flyer),

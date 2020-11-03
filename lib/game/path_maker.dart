@@ -11,6 +11,7 @@ class PathMaker {
   static const double defaultPathHieght = 7.5;
   static const double minPathHeight = 5.5;
   static const double sameBuildingError = 0.5;
+  static const double wallDistance = 1.5;
 
   Offset startPoint = Offset.zero;
   Offset startVelocity = Offset.zero;
@@ -80,7 +81,7 @@ class PathMaker {
 
   List<Offset> generateParabola(
       Offset start, Offset startVelocity, Offset acceleration, double distance,
-      {double unitX: 1.5, Offset offset: Offset.zero}) {
+      {double unitX: wallDistance, Offset offset: Offset.zero}) {
     final interval = distance ~/ unitX;
     final time = distance / startVelocity.dx;
     final delta = time / interval;

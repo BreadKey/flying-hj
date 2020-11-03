@@ -416,7 +416,7 @@ class FlyingGame extends ChangeNotifier {
     field.walls[currentWallLength - 2].canCollide = false;
     field.walls[currentWallLength - 4].canCollide = false;
     field.walls[currentWallLength - 6].canCollide = false;
-    dungeonHole.setPoint(Offset(x - dungeonHole.spriteWidth / 2,
+    dungeonHole.setPoint(Offset(x - PathMaker.wallDistance,
         gameHeight - _pathMaker.previousTopWallHeight));
     dungeonHole.activate();
     _wasDungeonMade = true;
